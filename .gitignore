@@ -1,0 +1,21 @@
+# Dart/Pub
+*.dart_tool/
+*.packages
+*.flutter-plugins
+*.flutter-plugins-dependencies
+generated_plugin_registrant.dart
+
+# Build
+build/
+android/app/debug.keystore
+
+# iOS
+ios/Pods/
+ios/.generated/
+*.xcworkspace
+
+# VS Code
+.vscode/
+
+# Firebase
+*.firebaserc
