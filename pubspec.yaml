@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   firebase_core: ^3.11.0
   firebase_auth: ^5.4.2
+  flutter_native_splash: ^2.4.4
 
 dev_dependencies:
   flutter_test:
@@ -19,3 +20,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/gagionvuive.png
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/gagionvuive.png
+  android_12:
+    image: assets/gagionvuive.png
+    color: "#FFFFFF"

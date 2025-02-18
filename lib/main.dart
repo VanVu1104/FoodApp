@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'auth_service.dart';
+import 'screens/splash_screen.dart'; // Import màn hình Splash
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +19,11 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthScreen(),
+      initialRoute: '/', // Định nghĩa route ban đầu là SplashScreen
+      routes: {
+        '/': (context) => SplashScreen(),
+        '/login': (context) => AuthScreen(), // Route màn hình đăng nhập
+      },
     );
   }
 }
