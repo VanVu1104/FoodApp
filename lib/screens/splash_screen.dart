@@ -21,16 +21,14 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.red.shade200, Colors.red],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          color:
+              Color.fromRGBO(253, 0, 0, 1),
         ),
         child: Center(
           child: Image.asset(
-            'assets/gagionvuive.png',
-            width: 200,
+            'assets/logo.png',
+            width: 350,
+            height: 350,
           ),
         ),
       ),
