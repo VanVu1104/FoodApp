@@ -6,26 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // // Đăng ký tài khoản
-  // Future<User?> signUp(String email, String password, String name) async {
-  //   try {
-  //     UserCredential userCredential =
-  //         await _auth.createUserWithEmailAndPassword(
-  //       email: email,
-  //       password: password,
-  //     );
-
-  //     await userCredential.user?.updateDisplayName(name);
-  //     // await userCredential.user?.updateDisplayName(phone);
-  //     // await userCredential.user?.updateDisplayName(address);
-
-  //     return userCredential.user;
-  //   } catch (e) {
-  //     print("Đăng ký thất bại: $e");
-  //     return null;
-  //   }
-  // }
-
   // Đăng ký tài khoản
   Future<User?> signUp(String email, String password, String name,
       {bool isManager = false}) async {

@@ -10,9 +10,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Chuyển sang màn hình chính sau 3 giây
+    // Chuyển sang màn hình đăng nhập sau 3 giây
     Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacementNamed(context, '/');
     });
   }
 
@@ -22,13 +22,14 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         decoration: BoxDecoration(
           color:
-              Color.fromRGBO(253, 0, 0, 1),
+              Color.fromRGBO(253, 0, 0, 1), // Màu nền đỏ (rgba(253, 0, 0, 1))
         ),
         child: Center(
           child: Image.asset(
-            'assets/logo.png',
-            width: 350,
-            height: 350,
+            'assets/logo2.png', // Logo
+            // width: MediaQuery.of(context).size.width *
+            //     0.7, // 70% chiều rộng màn hình
+            fit: BoxFit.fitWidth,
           ),
         ),
       ),

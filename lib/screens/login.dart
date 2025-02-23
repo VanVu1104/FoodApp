@@ -1,12 +1,12 @@
-import 'package:demo_firebase/Login_Register/BackEnd/auth_google.dart';
-import 'package:demo_firebase/Login_Register/FrontEnd/forgotpassword.dart';
-import 'package:demo_firebase/Login_Register/FrontEnd/phone_auth.dart';
+import 'package:demo_firebase/services/auth_google.dart';
+import 'package:demo_firebase/services/forgot_password.dart';
+import 'package:demo_firebase/services/phone_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:demo_firebase/Login_Register/BackEnd/auth_service.dart';
-import 'package:demo_firebase/Login_Register/FrontEnd/register.dart';
-import 'package:demo_firebase/Login_Register/FrontEnd/home.dart';
+import 'package:demo_firebase/services/auth_service.dart';
+import 'package:demo_firebase/services/register.dart';
+import 'package:demo_firebase/screens/screen_home.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
