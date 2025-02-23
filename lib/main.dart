@@ -1,3 +1,5 @@
+import 'package:demo_firebase/screens/news_screen_1.dart';
+import 'package:demo_firebase/screens/news_screen_2.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -21,7 +23,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/', // Route mặc định
       routes: {
-        '/': (context) => ScreenLoading1(),
+        // '/': (context) => ScreenLoading1(),
+        '/': (context) => NewsScreen2(),
         '/login': (context) => AuthScreen(), // Màn hình đăng nhập
       },
     );
