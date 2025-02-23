@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:demo_firebase/Login_Register/BackEnd/auth_service.dart';
-import 'home.dart';
+import 'package:demo_firebase/services/auth_service.dart';
+import '../screens/screen_home.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override

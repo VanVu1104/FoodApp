@@ -1,9 +1,9 @@
-import 'package:demo_firebase/Login_Register/BackEnd/auth_google.dart';
+import 'package:demo_firebase/services/auth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:demo_firebase/Login_Register/BackEnd/auth_service.dart';
-import 'package:demo_firebase/Login_Register/FrontEnd/login.dart';
+import 'package:demo_firebase/services/auth_service.dart';
+import 'package:demo_firebase/screens/login.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic>? userData;

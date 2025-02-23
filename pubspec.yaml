@@ -15,7 +15,6 @@ dependencies:
   google_sign_in: ^5.0.7
   flutter_native_splash: ^2.4.4
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -27,6 +26,7 @@ flutter:
     - assets/
 flutter_native_splash:
   color: "#FFFFFF"
+  image: assets/logo2.png
   android_12:
-    image: assets/logo.png
+    image: assets/logo2.png
     color: "#FFFFFF"
