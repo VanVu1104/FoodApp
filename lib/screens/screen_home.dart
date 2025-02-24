@@ -6,7 +6,7 @@ import 'package:demo_firebase/services/auth_service.dart';
 import 'package:demo_firebase/screens/login.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Map<String, dynamic>? userData;
+  Map<String, dynamic>? userData;
 
   HomeScreen({Key? key, this.userData}) : super(key: key);
 
@@ -15,32 +15,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Map<String, dynamic>? userData;
-
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  User? user;
   @override
   void initState() {
     super.initState();
-    if (widget.userData != null) {
-      userData = widget.userData; // Sử dụng dữ liệu từ widget nếu đã có
-    } else {
-      _loadUserData(); // Nếu không có, lấy dữ liệu từ Firestore
-    }
-  }
-
-  // Lấy dữ liệu người dùng từ Firestore
-  Future<void> _loadUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user.uid)
-          .get();
-
-      setState(() {
-        userData =
-            userDoc.data() as Map<String, dynamic>?; // Cập nhật lại dữ liệu
-      });
-    }
+    user = _auth.currentUser;
   }
 
   // Đăng xuất người dùng
@@ -65,11 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: userData == null
+      body: user == null
           ? Center(child: CircularProgressIndicator()) // Đợi dữ liệu
           : Center(
               child: Text(
-                "Chào mừng, ${userData?['name'] ?? 'Người dùng'}!", // Hiển thị tên người dùng
+                "Chào mừng, ${user?.displayName ?? 'Người dùng'}!", // Hiển thị tên người dùng
                 style: TextStyle(fontSize: 20),
               ),
             ),
