@@ -17,6 +17,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   font_awesome_flutter: ^10.8.0
 
+  # Map
+  flutter_map: ^7.0.2
+  flutter_map_location_marker: ^9.1.1
+  latlong2: ^0.9.0
+  geolocator: ^13.0.2
+  geocoding: ^3.0.0
+  xml: ^6.5.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
