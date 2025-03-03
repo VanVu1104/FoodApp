@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/custom_app_bar.dart';
+
 class NewsScreen2 extends StatelessWidget {
   const NewsScreen2({super.key});
 
@@ -14,35 +16,12 @@ class NewsScreen2 extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: customAppBar(context, 'SINH NHẬT THÊM BÁNH, BÉ YÊU THÊM VUI – GIÁ CHỈ TỪ 78K/BÉ'),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // App Bar
-              Padding(
-                padding: EdgeInsets.all(screenWidth * 0.04),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(CupertinoIcons.back, size: 36),
-                    ),
-                    SizedBox(width: screenWidth * 0.03),
-                    Expanded(
-                      child: Text(
-                        'SINH NHẬT THÊM BÁNH, BÉ YÊU THÊM VUI – GIÁ CHỈ TỪ 78K/BÉ',
-                        style: TextStyle(
-                          fontSize: bigFontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               // Banner
               Image.asset('assets/news_banner_2.png', fit: BoxFit.fitWidth),
 
