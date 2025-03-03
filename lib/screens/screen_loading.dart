@@ -1,8 +1,34 @@
 import 'package:demo_firebase/screens/screen_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ScreenLoading1 extends StatelessWidget {
+class ScreenLoading1 extends StatefulWidget {
+  @override
+  _ScreenLoading1State createState() => _ScreenLoading1State();
+}
+
+class _ScreenLoading1State extends State<ScreenLoading1> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAutoLogin();
+  }
+
+  void _checkAutoLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool rememberMe = prefs.getBool('rememberMe') ?? false;
+    if (rememberMe && _auth.currentUser != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

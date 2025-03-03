@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_firebase/services/auth_service.dart';
 import 'package:demo_firebase/services/register.dart';
 import 'package:demo_firebase/screens/screen_home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,6 +23,43 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _obscurePassword = true;
   String _message = "";
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  bool _rememberMe = false;
+  bool _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedUser();
+    _checkAutoLogin();
+  }
+
+  //Hàm Load User đã đăng nhập trước đó hay chưa
+  void _loadRememberedUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _emailController.text = prefs.getString('email') ?? '';
+      _passwordController.text = prefs.getString('password') ?? '';
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+    });
+  }
+
+  // Hàm lưu member đã đăng nha
+  void _saveRememberedUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setString('email', _emailController.text);
+      await prefs.setString('password', _passwordController.text);
+      await prefs.setBool('rememberMe', true);
+    } else {
+      await prefs.clear();
+    }
+  }
+
+  // Check user đã đăng nhập trước đó hay chưa
+  void _checkAutoLogin() async {
+    if (_auth.currentUser != null) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
 
   // Hàm đăng ký
   void _handleSignUp() {
@@ -31,21 +70,29 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   // Hàm đăng nhập
-  void _handleSignIn() async {
+  Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      var user = await _authService.signIn(
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (user != null) {
+      setState(() {
+        _isLoading = true;
+        _message = '';
+      });
+      try {
+        await _auth.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        _saveRememberedUser();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
         );
-      } else {
+      } catch (e) {
         setState(() {
-          _message = "Đăng nhập thất bại!";
+          _message = e.toString();
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
         });
       }
     }
@@ -134,18 +181,31 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const ForgotPassword(),
                 SizedBox(height: 20),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (value) =>
+                          setState(() => _rememberMe = value!),
+                    ),
+                    Text('Ghi nhớ mật khẩu')
+                  ],
+                ),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _handleSignIn,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text("Đăng nhập", style: TextStyle(fontSize: 16)),
-                  ),
+                  child: _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _signIn,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child:
+                              Text("Đăng nhập", style: TextStyle(fontSize: 16)),
+                        ),
                 ),
                 Row(
                   children: [
