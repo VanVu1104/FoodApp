@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/custom_app_bar.dart';
+
 class PolicyScreen extends StatelessWidget {
   const PolicyScreen({super.key});
 
@@ -14,35 +16,12 @@ class PolicyScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: customAppBar(context , 'Chính sách'),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // App Bar
-              Padding(
-                padding: EdgeInsets.all(screenWidth * 0.04),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(CupertinoIcons.back, size: 36),
-                    ),
-                    // SizedBox(width: screenWidth * 0.03),
-                    Expanded(
-                      child: Text(
-                        'Chính sách',
-                        style: TextStyle(
-                          fontSize: bigFontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               // Main Content
               Padding(
                 padding: EdgeInsets.all(screenWidth * 0.04),
