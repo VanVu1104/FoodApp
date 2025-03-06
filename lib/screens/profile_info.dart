@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileInfoPage extends StatefulWidget {
   @override
@@ -10,20 +12,56 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController birthdateController = TextEditingController();
-
+  String email = '';
   bool showSuccessMessage = false;
+  @override
+  void initState() {
+    super.initState();
+    loadUserInfo();
+  }
 
-  void _saveChanges() {
-    setState(() {
-      showSuccessMessage = true;
-    });
+  void _saveChanges() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      String uid = user.uid;
 
-    // Ẩn thông báo sau 2 giây
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() {
-        showSuccessMessage = false;
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'name': usernameController.text,
+        'phone': phoneController.text,
+        'birthdate': birthdateController.text,
       });
-    });
+
+      setState(() {
+        showSuccessMessage = true;
+      });
+
+      Future.delayed(Duration(seconds: 2), () {
+        setState(() {
+          showSuccessMessage = false;
+        });
+      });
+    }
+  }
+
+  Future<void> loadUserInfo() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    print("User uid: $user?.uid");
+    if (user != null) {
+      String uid = user.uid;
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (userDoc.exists) {
+        Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          usernameController.text = data['name'] ?? '';
+          phoneController.text = data['phone'] ?? '';
+          birthdateController.text = data['birthdate'] ?? '';
+          email = data['email'] ?? '';
+          emailController.text = email; // Gán email vào TextEditingController
+        });
+      }
+    }
   }
 
   @override
@@ -174,8 +212,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
           );
           if (pickedDate != null) {
             setState(() {
-              controller.text =
-                  "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+              controller.text = controller.text =
+                  '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
             });
           }
         },
