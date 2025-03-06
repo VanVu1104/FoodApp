@@ -79,69 +79,72 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 70,
-              backgroundImage: AssetImage('assets/avatar.png'),
-            ),
-            SizedBox(height: 10),
-            Text('Thy Do',
-                style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFFD0000))),
-            SizedBox(height: 20),
-            _buildTextField(usernameController, 'Tên đăng nhập'),
-            _buildTextField(phoneController, 'Số điện thoại'),
-            _buildTextField(emailController, 'Email'),
-            _buildDateField(birthdateController, 'Ngày sinh'),
-            SizedBox(height: 20),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 70,
+                backgroundImage: AssetImage('assets/avatar.png'),
+              ),
+              SizedBox(height: 10),
+              Text('Thy Do',
+                  style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFFD0000))),
+              SizedBox(height: 20),
+              _buildTextField(usernameController, 'Tên đăng nhập'),
+              _buildTextField(phoneController, 'Số điện thoại'),
+              _buildTextField(emailController, 'Email'),
+              _buildDateField(birthdateController, 'Ngày sinh'),
+              SizedBox(height: 20),
 
-            // Bọc nút Lưu thay đổi trong Stack
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding:
-                        EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text('Lưu thay đổi',
-                      style: TextStyle(color: Colors.white, fontSize: 23)),
-                ),
-                if (showSuccessMessage)
-                  Positioned(
-                    child: Container(
+              // Bọc nút Lưu thay đổi trong Stack
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _saveChanges,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
                       padding:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFFD0000),
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Lưu thay đổi thành công',
-                            style: TextStyle(color: Colors.white, fontSize: 23),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(Icons.check_circle, color: Colors.white),
-                        ],
+                    ),
+                    child: Text('Lưu thay đổi',
+                        style: TextStyle(color: Colors.white, fontSize: 23)),
+                  ),
+                  if (showSuccessMessage)
+                    Positioned(
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFFD0000),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Lưu thay đổi thành công',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 23),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.check_circle, color: Colors.white),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
