@@ -175,7 +175,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           "ĐĂNG NHẬP",
                           style: TextStyle(
                             color: const Color(0xFFDD2F36),
-                            fontSize: 24,
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -348,9 +348,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               child: Text(
                                 "Đăng ký ngay",
                                 style: TextStyle(
-                                  color: Color(0xFFDD2F36),
+                                  color: Color(0xFFFD0000),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
+                                  decoration:
+                                      TextDecoration.underline, // Gạch chân
+                                  decorationColor: Colors.red, // Màu gạch chân
                                 ),
                               ),
                             ),
