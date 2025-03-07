@@ -1,8 +1,8 @@
 import 'package:demo_firebase/models/product.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import '../services/product_service.dart';
+import '../services/cart_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -18,12 +18,13 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? selectedSizeId;
   int quantity = 1;
+  bool _isAddingToCart = false;
+  final CartService _cartService = CartService();
 
   @override
   void initState() {
     super.initState();
     // Set the first size as default if available
-
     selectedSizeId = widget.product.sizes.first.sizeId;
   }
 
@@ -37,6 +38,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     extraPrice = selectedSize.extraPrice.toDouble();
 
     return (basePrice + extraPrice) * quantity;
+  }
+
+  // Add to cart function
+  Future<void> _addToCart() async {
+    if (selectedSizeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn kích thước')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    try {
+      await _cartService.addToCart(
+        product: widget.product,
+        selectedSizeId: selectedSizeId!,
+        quantity: quantity,
+        totalPrice: totalPrice,
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã thêm ${widget.product.productName} vào giỏ hàng'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      setState(() {
+        _isAddingToCart = false;
+      });
+    }
   }
 
   @override
@@ -302,9 +346,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ],
                           ),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              // Add to cart functionality
-                            },
+                            onPressed: _isAddingToCart ? null : _addToCart,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: widget.color,
                               padding: const EdgeInsets.symmetric(
@@ -312,8 +354,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 vertical: 12,
                               ),
                             ),
-                            icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                            label: const Text("Thêm vào giỏ", style: TextStyle(color: Colors.white)),
+                            icon: _isAddingToCart 
+                                ? Container(
+                                    width: 24,
+                                    height: 24,
+                                    padding: const EdgeInsets.all(2.0),
+                                    child: const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : const Icon(Icons.shopping_cart, color: Colors.white),
+                            label: Text(
+                              _isAddingToCart ? "Đang thêm..." : "Thêm vào giỏ", 
+                              style: const TextStyle(color: Colors.white)
+                            ),
                           ),
                         ],
                       ),
