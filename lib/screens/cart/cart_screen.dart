@@ -1,5 +1,7 @@
+import 'package:demo_firebase/models/product.dart';
 import 'package:demo_firebase/screens/cart/empty_cart_screen.dart';
 import 'package:demo_firebase/screens/menu_screen.dart';
+import 'package:demo_firebase/screens/product_detail_screen.dart';
 import 'package:demo_firebase/services/cart_service.dart';
 import 'package:demo_firebase/services/product_service.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
@@ -66,20 +68,49 @@ class _CartScreenState extends State<CartScreen> {
                         child: const Icon(Icons.delete, color: Colors.white),
                       ),
                       direction: DismissDirection.endToStart,
-                      onDismissed: (direction) {
-                        _cartService.removeFromCart(item.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                '${data['productName']} đã bị xóa khỏi giỏ hàng'),
-                            action: SnackBarAction(
-                              label: 'HOÀN TÁC',
-                              onPressed: () {
-                                // Implement undo functionality if needed
-                              },
+                      onDismissed: (direction) async {
+                        try {
+                          // Remove the item and get its data for potential restoration
+                          final removedItemData =
+                              await _cartService.removeFromCart(item.id);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  '${data['productName']} đã bị xóa khỏi giỏ hàng'),
+                              action: SnackBarAction(
+                                label: 'HOÀN TÁC',
+                                onPressed: () async {
+                                  try {
+                                    // Restore the deleted item
+                                    await _cartService.undoRemoveFromCart(
+                                        item.id, removedItemData);
+
+                                    // Optionally show a confirmation message
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('Đã hoàn tác thành công')),
+                                    );
+
+                                    // If needed, refresh your UI
+                                    setState(() {});
+                                  } catch (error) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Không thể hoàn tác: $error')),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        } catch (error) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Lỗi: $error')),
+                          );
+                        }
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -138,8 +169,52 @@ class _CartScreenState extends State<CartScreen> {
                                           color: Color(0xFFFFC115),
                                           size: 22,
                                         ),
-                                        onPressed: () {
-                                          // Edit functionality if needed
+                                        onPressed: () async {
+                                          // First, get the product details from the product ID in the cart item
+                                          final productId = data['productId'];
+                                          try {
+                                            // Fetch the product from your product service
+                                            final productDoc =
+                                                await FirebaseFirestore.instance
+                                                    .collection('products')
+                                                    .doc(productId)
+                                                    .get();
+                                            if (!productDoc.exists) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Không thể tìm thấy thông tin sản phẩm')),
+                                              );
+                                              return;
+                                            }
+
+                                            // Convert to Product object
+                                            final product = Product.fromJson(
+                                                productDoc.data()!);
+
+                                            // Navigate to the product detail page in edit mode
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProductDetailScreen(
+                                                  product: product,
+                                                  color: Colors.red,
+                                                  isEditingCart: true,
+                                                  cartItemId: item.id,
+                                                  initialSizeId: data['sizeId'],
+                                                  initialQuantity:
+                                                      data['quantity'],
+                                                ),
+                                              ),
+                                            );
+                                          } catch (error) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text('Lỗi: $error')),
+                                            );
+                                          }
                                         },
                                         constraints: BoxConstraints.tight(
                                             const Size(24, 24)),

@@ -7,9 +7,20 @@ import '../services/cart_service.dart';
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
   final Color color;
-
-  const ProductDetailScreen(
-      {super.key, required this.product, required this.color});
+// New parameters for edit mode
+  final bool isEditingCart;
+  final String? cartItemId;
+  final String? initialSizeId;
+  final int? initialQuantity;
+  const ProductDetailScreen({
+    super.key,
+    required this.product,
+    required this.color,
+    this.isEditingCart = false,
+    this.cartItemId,
+    this.initialSizeId,
+    this.initialQuantity,
+  });
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -20,12 +31,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int quantity = 1;
   bool _isAddingToCart = false;
   final CartService _cartService = CartService();
+  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    // Set the first size as default if available
-    selectedSizeId = widget.product.sizes.first.sizeId;
+    // Use initial values if editing cart item, otherwise use defaults
+    if (widget.isEditingCart && widget.initialSizeId != null) {
+      selectedSizeId = widget.initialSizeId;
+      quantity = widget.initialQuantity ?? 1;
+    } else {
+      // Set the first size as default if available
+      selectedSizeId = widget.product.sizes.first.sizeId;
+    }
   }
 
   double get totalPrice {
@@ -60,7 +78,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         quantity: quantity,
         totalPrice: totalPrice,
       );
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đã thêm ${widget.product.productName} vào giỏ hàng'),
@@ -79,6 +97,64 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } finally {
       setState(() {
         _isAddingToCart = false;
+      });
+    }
+  }
+
+// Update cart item function - new method
+  Future<void> _updateCartItem() async {
+    if (selectedSizeId == null || widget.cartItemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Lỗi: Thiếu thông tin kích thước hoặc mã giỏ hàng')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Get the selected size information
+      final selectedSize = widget.product.sizes
+          .firstWhere((size) => size.sizeId == selectedSizeId);
+
+      // Calculate unit price with the selected size
+      final unitPrice =
+          (widget.product.productPrice + selectedSize.extraPrice).toDouble();
+
+      // Update cart item
+      await _cartService.editCartItem(
+        cartItemId: widget.cartItemId!,
+        selectedSizeId: selectedSizeId!,
+        sizeName: selectedSize.sizeName,
+        unitPrice: unitPrice,
+        quantity: quantity,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Đã cập nhật ${widget.product.productName} trong giỏ hàng'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Return to the cart page
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      setState(() {
+        _isProcessing = false;
       });
     }
   }
@@ -160,11 +236,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SingleChildScrollView(
-                          scrollDirection: Axis.horizontal, // Enables horizontal scrolling
+                          scrollDirection:
+                              Axis.horizontal, // Enables horizontal scrolling
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: widget.product.sizes.map<Widget>((size) {
-                              final bool isSelected = selectedSizeId == size.sizeId;
+                              final bool isSelected =
+                                  selectedSizeId == size.sizeId;
                               return Padding(
                                 padding: const EdgeInsets.only(right: 8.0),
                                 child: InkWell(
@@ -174,10 +252,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     });
                                   },
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
                                       border: Border.all(
-                                        color: isSelected ? Colors.red : Colors.grey[300]!,
+                                        color: isSelected
+                                            ? Colors.red
+                                            : Colors.grey[300]!,
                                         width: isSelected ? 2 : 2.5,
                                       ),
                                       borderRadius: BorderRadius.circular(12),
@@ -187,7 +268,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       child: Text(
                                         size.sizeName,
                                         style: TextStyle(
-                                          color: isSelected ? Colors.red : Colors.grey[500],
+                                          color: isSelected
+                                              ? Colors.red
+                                              : Colors.grey[500],
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                         ),
@@ -225,8 +308,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       color: Colors.red,
                                       width: 2), // Red border
                                 ),
-                                child: const Icon(Icons.remove,
-                                    color: Colors.red),
+                                child:
+                                    const Icon(Icons.remove, color: Colors.red),
                               ),
                             ),
                             const SizedBox(width: 10), // Spacing
@@ -269,8 +352,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       color: Colors.red,
                                       width: 2), // Red border
                                 ),
-                                child:
-                                    const Icon(Icons.add, color: Colors.red),
+                                child: const Icon(Icons.add, color: Colors.red),
                               ),
                             ),
                           ],
@@ -346,7 +428,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ],
                           ),
                           ElevatedButton.icon(
-                            onPressed: _isAddingToCart ? null : _addToCart,
+                            // Change function based on whether we're editing or adding
+                            onPressed: _isProcessing
+                                ? null
+                                : (widget.isEditingCart
+                                    ? _updateCartItem
+                                    : _addToCart),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: widget.color,
                               padding: const EdgeInsets.symmetric(
@@ -354,7 +441,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 vertical: 12,
                               ),
                             ),
-                            icon: _isAddingToCart 
+                            icon: _isAddingToCart
                                 ? Container(
                                     width: 24,
                                     height: 24,
@@ -364,11 +451,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       strokeWidth: 3,
                                     ),
                                   )
-                                : const Icon(Icons.shopping_cart, color: Colors.white),
+                                : const Icon(Icons.shopping_cart,
+                                    color: Colors.white),
                             label: Text(
-                              _isAddingToCart ? "Đang thêm..." : "Thêm vào giỏ", 
-                              style: const TextStyle(color: Colors.white)
-                            ),
+                                _isAddingToCart
+                                    ? "Đang thêm..."
+                                    : "Thêm vào giỏ",
+                                style: const TextStyle(color: Colors.white)),
                           ),
                         ],
                       ),

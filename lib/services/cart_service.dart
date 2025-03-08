@@ -26,7 +26,8 @@ class CartService {
     }
 
     // Find the selected size from the product
-    final selectedSize = product.sizes.firstWhere((size) => size.sizeId == selectedSizeId);
+    final selectedSize =
+        product.sizes.firstWhere((size) => size.sizeId == selectedSizeId);
 
     // Check if the item already exists in the cart
     final existingCartItem = await _getCartRef()
@@ -37,11 +38,13 @@ class CartService {
     if (existingCartItem.docs.isNotEmpty) {
       // Update existing cart item
       final docId = existingCartItem.docs.first.id;
-      final existingQuantity = existingCartItem.docs.first.get('quantity') as int;
-      
+      final existingQuantity =
+          existingCartItem.docs.first.get('quantity') as int;
+
       await _getCartRef().doc(docId).update({
         'quantity': existingQuantity + quantity,
-        'totalPrice': (existingCartItem.docs.first.get('unitPrice') as double) * (existingQuantity + quantity),
+        'totalPrice': (existingCartItem.docs.first.get('unitPrice') as double) *
+            (existingQuantity + quantity),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } else {
@@ -52,7 +55,8 @@ class CartService {
         'productImg': product.productImg,
         'sizeId': selectedSizeId,
         'sizeName': selectedSize.sizeName,
-        'unitPrice': (product.productPrice + selectedSize.extraPrice).toDouble(),
+        'unitPrice':
+            (product.productPrice + selectedSize.extraPrice).toDouble(),
         'quantity': quantity,
         'totalPrice': totalPrice,
         'createdAt': FieldValue.serverTimestamp(),
@@ -84,11 +88,35 @@ class CartService {
   }
 
   // Remove item from cart
-  Future<void> removeFromCart(String cartItemId) async {
+  Future<Map<String, dynamic>> removeFromCart(String cartItemId) async {
     if (currentUserId == null) {
       throw Exception('User not logged in');
     }
+
+    // Get the item data before deleting it
+    final documentSnapshot = await _getCartRef().doc(cartItemId).get();
+    if (!documentSnapshot.exists) {
+      throw Exception('Cart item not found');
+    }
+
+    final itemData = documentSnapshot.data() as Map<String, dynamic>;
+
+    // Delete the item
     await _getCartRef().doc(cartItemId).delete();
+
+    // Return the item data so it can be used for undo
+    return itemData;
+  }
+
+  // Add a new method to restore a deleted cart item
+  Future<void> undoRemoveFromCart(
+      String cartItemId, Map<String, dynamic> itemData) async {
+    if (currentUserId == null) {
+      throw Exception('User not logged in');
+    }
+
+    // Restore the item with the same ID
+    await _getCartRef().doc(cartItemId).set(itemData);
   }
 
   // Update cart item quantity
@@ -96,13 +124,39 @@ class CartService {
     if (currentUserId == null) {
       throw Exception('User not logged in');
     }
-    
+
     final cartItem = await _getCartRef().doc(cartItemId).get();
     final unitPrice = cartItem.get('unitPrice') as double;
-    
+
     await _getCartRef().doc(cartItemId).update({
       'quantity': quantity,
       'totalPrice': unitPrice * quantity,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+// Edit cart item - change size and/or quantity
+  Future<void> editCartItem({
+    required String cartItemId,
+    required String selectedSizeId,
+    required String sizeName,
+    required double unitPrice,
+    required int quantity,
+  }) async {
+    if (currentUserId == null) {
+      throw Exception('User not logged in');
+    }
+
+    // Calculate new total price
+    final totalPrice = unitPrice * quantity;
+
+    // Update the cart item with new size and quantity
+    await _getCartRef().doc(cartItemId).update({
+      'sizeId': selectedSizeId,
+      'sizeName': sizeName,
+      'quantity': quantity,
+      'unitPrice': unitPrice,
+      'totalPrice': totalPrice,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -112,7 +166,7 @@ class CartService {
     if (currentUserId == null) {
       throw Exception('User not logged in');
     }
-    
+
     final cartItems = await _getCartRef().get();
     for (var item in cartItems.docs) {
       await _getCartRef().doc(item.id).delete();
