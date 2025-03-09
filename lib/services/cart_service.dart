@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/product.dart';
+import 'package:flutter/material.dart';
 
 class CartService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,6 +13,129 @@ class CartService {
   // Get cart reference for the current user
   CollectionReference _getCartRef() {
     return _firestore.collection('users').doc(currentUserId).collection('cart');
+  }
+
+  // Calculate total price based on product, size, and quantity
+  double calculateTotalPrice({
+    required Product product,
+    required String selectedSizeId,
+    required int quantity,
+  }) {
+    double basePrice = product.productPrice.toDouble();
+    double extraPrice = 0;
+
+    final selectedSize =
+        product.sizes.firstWhere((size) => size.sizeId == selectedSizeId);
+
+    extraPrice = selectedSize.extraPrice.toDouble();
+
+    return (basePrice + extraPrice) * quantity;
+  }
+
+  // Get selected size information
+  ProductSize getSelectedSize({
+    required Product product,
+    required String selectedSizeId,
+  }) {
+    return product.sizes.firstWhere((size) => size.sizeId == selectedSizeId);
+  }
+
+  // Add product to cart with UI feedback
+  Future<void> addToCartWithFeedback({
+    required Product product,
+    required String selectedSizeId,
+    required int quantity,
+    required double totalPrice,
+    required BuildContext context,
+  }) async {
+    if (selectedSizeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn kích thước')),
+      );
+      return;
+    }
+
+    try {
+      await addToCart(
+        product: product,
+        selectedSizeId: selectedSizeId,
+        quantity: quantity,
+        totalPrice: totalPrice,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã thêm ${product.productName} vào giỏ hàng'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // Update cart item with UI feedback
+  Future<void> updateCartItemWithFeedback({
+    required Product product,
+    required String cartItemId,
+    required String selectedSizeId,
+    required int quantity,
+    required BuildContext context,
+  }) async {
+    if (selectedSizeId == null || cartItemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Lỗi: Thiếu thông tin kích thước hoặc mã giỏ hàng')),
+      );
+      return;
+    }
+
+    try {
+      // Get the selected size information
+      final selectedSize = getSelectedSize(
+        product: product,
+        selectedSizeId: selectedSizeId,
+      );
+
+      // Calculate unit price with the selected size
+      final unitPrice =
+          (product.productPrice + selectedSize.extraPrice).toDouble();
+
+      // Update cart item
+      await editCartItem(
+        cartItemId: cartItemId,
+        selectedSizeId: selectedSizeId,
+        sizeName: selectedSize.sizeName,
+        unitPrice: unitPrice,
+        quantity: quantity,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã cập nhật ${product.productName} trong giỏ hàng'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Return to the cart page
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   // Add product to cart
@@ -135,7 +259,7 @@ class CartService {
     });
   }
 
-// Edit cart item - change size and/or quantity
+  // Edit cart item - change size and/or quantity
   Future<void> editCartItem({
     required String cartItemId,
     required String selectedSizeId,

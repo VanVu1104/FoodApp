@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../services/product_service.dart';
 import '../services/cart_service.dart';
+import '../services/favourite_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -32,7 +33,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isAddingToCart = false;
   final CartService _cartService = CartService();
   bool _isProcessing = false;
-
+  final FavouriteService _favouriteService = FavouriteService();
+  bool _isFavourite = false;
+  bool _isLoadingFavourite = true;
   @override
   void initState() {
     super.initState();
@@ -43,6 +46,54 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } else {
       // Set the first size as default if available
       selectedSizeId = widget.product.sizes.first.sizeId;
+    }
+    // Check if product is in favorites
+    _checkFavouriteStatus();
+  }
+
+// Check if this product is in favorites - just a simple UI state setter
+  Future<void> _checkFavouriteStatus() async {
+    setState(() {
+      _isLoadingFavourite = true;
+    });
+
+    try {
+      // Use the service to check if product is favorited
+      bool isFav =
+          await _favouriteService.isFavourite(widget.product.productId);
+      setState(() {
+        _isFavourite = isFav;
+      });
+    } catch (e) {
+      print("Error checking favorite status: $e");
+    } finally {
+      setState(() {
+        _isLoadingFavourite = false;
+      });
+    }
+  }
+
+  // Toggle favorite status - simplified to use the service
+  Future<void> _toggleFavourite() async {
+    setState(() {
+      _isLoadingFavourite = true;
+    });
+
+    try {
+      // Use the service to toggle favorite status and handle notifications
+      bool newStatus = await _favouriteService.toggleFavourite(
+          widget.product.productId, context, widget.product.productName);
+
+      // Just update the UI state
+      setState(() {
+        _isFavourite = newStatus;
+      });
+    } catch (e) {
+      print("Error toggling favorite: $e");
+    } finally {
+      setState(() {
+        _isLoadingFavourite = false;
+      });
     }
   }
 
@@ -163,7 +214,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-
+    print(widget.color);
     return Scaffold(
       backgroundColor: widget.color,
       appBar: AppBar(
@@ -175,8 +226,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.white),
-            onPressed: () {},
+            icon: _isLoadingFavourite
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Icon(_isFavourite ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.white),
+            onPressed: _isLoadingFavourite ? null : _toggleFavourite,
           ),
         ],
       ),
