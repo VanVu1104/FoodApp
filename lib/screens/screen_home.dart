@@ -1,3 +1,9 @@
+import 'package:demo_firebase/models/category.dart';
+import 'package:demo_firebase/screens/cart/cart_screen.dart';
+import 'package:demo_firebase/screens/category_screen.dart';
+import 'package:demo_firebase/screens/favourite_screen.dart';
+import 'package:demo_firebase/screens/menu_screen.dart';
+import 'package:demo_firebase/screens/order_screen.dart';
 import 'package:demo_firebase/screens/profile_info.dart'; // Import trang profile
 import 'package:demo_firebase/services/auth_google.dart';
 import 'package:flutter/material.dart';
@@ -75,6 +81,97 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Text(
                     "Xem Thông Tin Cá Nhân",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                // Nút chuyển qua trang Profile
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MenuScreen(
+                                color: Color(0xFFF00000),
+                              )), // Chuyển trang
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  ),
+                  child: Text(
+                    "Xem Menu",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                // Nút chuyển qua trang Profile
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              CategoryScreen()), // Chuyển trang
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  ),
+                  child: Text(
+                    "Xem Category",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => CartScreen()), // Chuyển trang
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  ),
+                  child: Text(
+                    "Xem giỏ hàng",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              FavouriteScreen()), // Chuyển trang
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  ),
+                  child: Text(
+                    "Xem trang yêu thích",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => OrderScreen()), // Chuyển trang
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  ),
+                  child: Text(
+                    "Xem trang order",
                     style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
                 ),
