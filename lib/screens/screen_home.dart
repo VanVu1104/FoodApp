@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'package:demo_firebase/widget/app_bar.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
-
   final List<String> _images = [
     'assets/banner3.png', // Ảnh banner 1
     'assets/banner4.png', // Ảnh banner 2
