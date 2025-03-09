@@ -1,13 +1,10 @@
-import 'package:demo_firebase/screens/profile_info.dart'; // Import trang profile
-import 'package:demo_firebase/services/auth_google.dart';
+
+import 'dart:async';
+import 'package:demo_firebase/widget/app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:demo_firebase/services/auth_service.dart';
-import 'package:demo_firebase/screens/login.dart';
 
 class HomeScreen extends StatefulWidget {
-  Map<String, dynamic>? userData;
+  final Map<String, dynamic>? userData;
 
   HomeScreen({Key? key, this.userData}) : super(key: key);
 
@@ -16,70 +13,101 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? user;
+  int _currentPage = 0;
+  final PageController _pageController = PageController();
+  final List<String> _images = [
+    'assets/banner3.png', // Ảnh banner 1
+    'assets/banner4.png', // Ảnh banner 2
+    'assets/banner5.png', // Ảnh banner 3
+  ];
 
   @override
   void initState() {
     super.initState();
-    user = _auth.currentUser;
-  }
-
-  // Đăng xuất người dùng
-  Future<void> _logOut() async {
-    await FirebaseServices().googleSignOut();
-    await AuthService().signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => AuthScreen()),
-    );
+    Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      if (_currentPage < _images.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+      _pageController.animateToPage(
+        _currentPage,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Trang chủ"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: _logOut,
+      body: Column(
+        children: [
+          // Header cố định
+          CustomHeader(),
+
+          // Nội dung chính (gồm cả slider)
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Banner Slider
+                  SizedBox(
+                    height: 200, // Chiều cao banner
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _images.length,
+                      onPageChanged: (int page) {
+                        setState(() {
+                          _currentPage = page;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        return Image.asset(
+                          _images[index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Chỉ báo vị trí slider
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: _images.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      return Container(
+                        width: 8,
+                        height: 8,
+                        margin:
+                            EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color:
+                              _currentPage == index ? Colors.red : Colors.grey,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  // Nội dung khác
+                  Column(
+                    children: List.generate(
+                      50, // Nội dung dài để cuộn
+                      (index) => Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text('Nội dung dòng $index',
+                            style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      body: user == null
-          ? Center(child: CircularProgressIndicator()) // Đợi dữ liệu
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "Chào mừng, ${user?.displayName ?? 'Người dùng'}!",
-                  style: TextStyle(fontSize: 20),
-                ),
-                SizedBox(height: 30),
-
-                // Nút chuyển qua trang Profile
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              ProfileInfoPage()), // Chuyển trang
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  ),
-                  child: Text(
-                    "Xem Thông Tin Cá Nhân",
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
     );
   }
 }
