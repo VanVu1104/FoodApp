@@ -72,4 +72,37 @@ class ProductService {
     final format = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
     return format.format(amount);
   }
+ Future<Product?> getProductByProductId(String productId) async {
+    try {
+      // Fetch the product document directly using its ID
+      DocumentSnapshot productDoc = await _firestore
+          .collection("products")
+          .doc(productId)
+          .get();
+
+      if (!productDoc.exists) {
+        return null; // Return null if product doesn't exist
+      }
+
+      // Create the product from the document data
+      Product product = Product.fromJson(productDoc.data() as Map<String, dynamic>);
+
+      // Fetch sizes for the product
+      QuerySnapshot sizeSnapshot = await _firestore
+          .collection("products")
+          .doc(productId)
+          .collection("size")
+          .get();
+
+      product.sizes = sizeSnapshot.docs
+          .map((doc) => ProductSize.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      return product;
+    } catch (e) {
+      print("Error fetching product: $e");
+      return null;
+    }
+  }
 }
+

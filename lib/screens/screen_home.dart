@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:demo_firebase/widget/app_bar.dart';
 import 'package:flutter/material.dart';

@@ -11,8 +11,17 @@ class Favourite {
 
   factory Favourite.fromJson(Map<String, dynamic> json) {
     return Favourite(
-        favouriteId: json["favouriteId"] ?? "",
-        productId: json["productName"] ?? "",
-        userId: json["productImg"] ?? "");
+      favouriteId: json["favouriteId"] ?? "",
+      productId: json["productId"] ?? "", // Fixed from productName to productId
+      userId: json["userId"] ?? "", // Fixed from productImg to userId
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "favouriteId": favouriteId,
+      "productId": productId,
+      "userId": userId,
+    };
   }
 }
