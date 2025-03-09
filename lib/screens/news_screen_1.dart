@@ -92,11 +92,14 @@ class NewsScreen1 extends StatelessWidget {
                     ),
                     SizedBox(height: screenHeight * 0.01),
                     Text(
-                        '✅ Thịt bò Wagyu - Ngon mềm, thẩm vị, tan ngay đầu lưỡi', style: TextStyle(fontSize: normalFontsize)),
+                        '✅ Thịt bò Wagyu - Ngon mềm, thẩm vị, tan ngay đầu lưỡi',
+                        style: TextStyle(fontSize: normalFontsize)),
                     Text(
-                        '✅ Bánh nướng thủ công - Giòn ngoài, mềm trong, chuẩn vị gourmet', style: TextStyle(fontSize: normalFontsize)),
+                        '✅ Bánh nướng thủ công - Giòn ngoài, mềm trong, chuẩn vị gourmet',
+                        style: TextStyle(fontSize: normalFontsize)),
                     Text(
-                        '✅ Sốt đặc biệt - Hòa quyện hương vị, đưa burger lên một tầm cao mới', style: TextStyle(fontSize: normalFontsize)),
+                        '✅ Sốt đặc biệt - Hòa quyện hương vị, đưa burger lên một tầm cao mới',
+                        style: TextStyle(fontSize: normalFontsize)),
                     SizedBox(height: screenHeight * 0.02),
                     Row(
                       children: [
@@ -120,8 +123,11 @@ class NewsScreen1 extends StatelessWidget {
                         style: TextStyle(fontSize: normalFontsize),
                         children: [
                           TextSpan(
-                            text: '💥 Chiếc Burger "mới toe" này lên kệ từ ngày ',
-                            style: TextStyle(color: Colors.black), // Make sure to set the color
+                            text:
+                                '💥 Chiếc Burger "mới toe" này lên kệ từ ngày ',
+                            style: TextStyle(
+                                color:
+                                    Colors.black), // Make sure to set the color
                           ),
                           TextSpan(
                             text: '01/01/2025',
