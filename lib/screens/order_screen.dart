@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demo_firebase/Utils/utils.dart';
 import 'package:demo_firebase/models/cart.dart';
 import 'package:demo_firebase/services/cart_service.dart';
 import 'package:demo_firebase/widgets/custom_loading.dart';
@@ -79,20 +80,18 @@ class _OrderScreenState extends State<OrderScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.blue,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Center(
-              child: Text(
-                "C",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                  20), // Đảm bảo ảnh bo tròn theo Container
+              child: Image.asset(
+                'assets/restaurant.png',
+                fit: BoxFit.fitWidth, // Đảm bảo ảnh hiển thị đầy đủ trong khung
               ),
             ),
           ),
+
           const SizedBox(width: 12),
 
           // Restaurant details
@@ -302,64 +301,80 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildPaymentInfoSection() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Thông tin thanh toán",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return StreamBuilder<List<CartItem>>(
+      stream: _cartService.getCartItems(),
+      builder: (context, snapshot) {
+        // Calculate subtotal from cart items
+        double subtotal = 0;
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          for (var item in snapshot.data!) {
+            subtotal += item.totalPrice;
+          }
+        }
+
+        // Format the subtotal using your Utils class
+        String formattedSubtotal = Utils().formatCurrency(subtotal);
+
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Tạm tính",
-                style: TextStyle(fontSize: 15),
+                "Thông tin thanh toán",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              Text(
-                "130.000đ",
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Tạm tính",
+                    style: TextStyle(fontSize: 15),
+                  ),
+                  Text(
+                    formattedSubtotal,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Phí vận chuyển (5.2 km)",
+                    style: TextStyle(fontSize: 15),
+                  ),
+                  Text(
+                    "20.000đ",
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Chọn mã ưu đãi",
+                    style: TextStyle(fontSize: 15),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey[500],
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Phí vận chuyển (5.2 km)",
-                style: TextStyle(fontSize: 15),
-              ),
-              Text(
-                "20.000đ",
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Chọn mã ưu đãi",
-                style: TextStyle(fontSize: 15),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey[500],
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -398,27 +413,27 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Payment method 1
+          // Payment method 1 - Thanh toán tiền mặt (dùng hình ảnh)
           _buildPaymentMethodItem(
-            icon: Icons.payments_outlined,
-            color: Colors.green,
+            image: Image.asset(
+              'assets/cash.png',
+              width: 15,
+              height: 15,
+              fit: BoxFit.fitWidth,
+            ),
             name: "Thanh toán tiền mặt",
             isSelected: true,
           ),
 
-          // Payment method 2
+// Payment method 2 - Zalopay (dùng icon)
           _buildPaymentMethodItem(
-            icon: Icons.account_balance_wallet,
-            color: Colors.blue,
+            image: Image.asset(
+              'assets/zalo.png',
+              width: 15,
+              height: 15,
+              fit: BoxFit.fitWidth,
+            ),
             name: "Zalopay",
-            isSelected: false,
-          ),
-
-          // Payment method 3
-          _buildPaymentMethodItem(
-            icon: Icons.payment,
-            color: Colors.red,
-            name: "VNPAY",
             isSelected: false,
           ),
         ],
@@ -427,8 +442,9 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildPaymentMethodItem({
-    required IconData icon,
-    required Color color,
+    IconData? icon,
+    Widget? image,
+    Color? color,
     required String name,
     required bool isSelected,
   }) {
@@ -440,14 +456,15 @@ class _OrderScreenState extends State<OrderScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            child: image ??
+                Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
           ),
           const SizedBox(width: 12),
           Expanded(
