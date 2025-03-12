@@ -179,7 +179,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       await _cartService.editCartItem(
         cartItemId: widget.cartItemId!,
         selectedSizeId: selectedSizeId!,
-        sizeName: selectedSize.sizeName,
         unitPrice: unitPrice,
         quantity: quantity,
       );
