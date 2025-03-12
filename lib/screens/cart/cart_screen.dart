@@ -1,6 +1,8 @@
+import 'package:demo_firebase/models/cart.dart';
 import 'package:demo_firebase/models/product.dart';
 import 'package:demo_firebase/screens/cart/empty_cart_screen.dart';
 import 'package:demo_firebase/screens/menu_screen.dart';
+import 'package:demo_firebase/screens/order_screen.dart';
 import 'package:demo_firebase/screens/product_detail_screen.dart';
 import 'package:demo_firebase/services/cart_service.dart';
 import 'package:demo_firebase/services/product_service.dart';
@@ -23,7 +25,7 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<List<CartItem>>(
       stream: _cartService.getCartItems(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -40,12 +42,12 @@ class _CartScreenState extends State<CartScreen> {
         }
 
         // Hide AppBar when cart is empty
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const EmptyCartScreen();
         }
 
         // Show AppBar with items
-        final cartItems = snapshot.data!.docs;
+        final cartItems = snapshot.data!;
 
         return Scaffold(
           appBar: customAppBar(context, 'Giỏ hàng'),
@@ -56,277 +58,298 @@ class _CartScreenState extends State<CartScreen> {
                 child: ListView.builder(
                   itemCount: cartItems.length,
                   itemBuilder: (context, index) {
-                    final item = cartItems[index];
-                    final data = item.data() as Map<String, dynamic>;
+                    final cartItem = cartItems[index];
 
-                    return Dismissible(
-                      key: Key(item.id),
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      direction: DismissDirection.endToStart,
-                      onDismissed: (direction) async {
-                        try {
-                          // Remove the item and get its data for potential restoration
-                          final removedItemData =
-                              await _cartService.removeFromCart(item.id);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  '${data['productName']} đã bị xóa khỏi giỏ hàng'),
-                              action: SnackBarAction(
-                                label: 'HOÀN TÁC',
-                                onPressed: () async {
-                                  try {
-                                    // Restore the deleted item
-                                    await _cartService.undoRemoveFromCart(
-                                        item.id, removedItemData);
-
-                                    // Optionally show a confirmation message
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content:
-                                              Text('Đã hoàn tác thành công')),
-                                    );
-
-                                    // If needed, refresh your UI
-                                    setState(() {});
-                                  } catch (error) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'Không thể hoàn tác: $error')),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          );
-                        } catch (error) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi: $error')),
+                    // Load product details for each cart item
+                    return FutureBuilder<Product?>(
+                      future: _productService
+                          .getProductByProductId(cartItem.productId),
+                      builder: (context, productSnapshot) {
+                        if (productSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
                           );
                         }
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.grey.withOpacity(0.2),
-                              width: 1,
-                            ),
+
+                        final product = productSnapshot.data;
+                        final productName =
+                            product?.productName ?? 'Unknown Product';
+                        final productImg =
+                            product?.productImg.isNotEmpty == true
+                                ? product!.productImg
+                                : '';
+
+                        // Get size information
+                        final selectedSize = product?.sizes.firstWhere(
+                          (size) => size.sizeId == cartItem.sizeId,
+                          orElse: () => ProductSize(
+                            sizeId: '',
+                            sizeName: 'Unknown Size',
+                            extraPrice: 0,
                           ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 16),
-                        child: Row(
-                          children: [
-                            // Product image
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                data['productImg'] ?? '',
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, error, _) => Container(
-                                  width: 60,
-                                  height: 60,
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.image_not_supported),
+                        );
+                        final sizeName = selectedSize?.sizeName ?? '';
+
+                        return Dismissible(
+                          key: Key(cartItem.cartItemId),
+                          background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child:
+                                const Icon(Icons.delete, color: Colors.white),
+                          ),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) async {
+                            try {
+                              // Remove the item and get its data for potential restoration
+                              final removedItem = await _cartService
+                                  .removeFromCart(cartItem.cartItemId);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      '$productName đã bị xóa khỏi giỏ hàng'),
+                                  action: SnackBarAction(
+                                    label: 'HOÀN TÁC',
+                                    onPressed: () async {
+                                      try {
+                                        // Restore the deleted item
+                                        await _cartService
+                                            .undoRemoveFromCart(removedItem);
+
+                                        // Optionally show a confirmation message
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Đã hoàn tác thành công')),
+                                        );
+
+                                        // If needed, refresh your UI
+                                        setState(() {});
+                                      } catch (error) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Không thể hoàn tác: $error')),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            } catch (error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Lỗi: $error')),
+                              );
+                            }
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  width: 1,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
-
-                            // Product details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Product name and edit icon in same row
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          data['productName'] ??
-                                              'Unknown Product',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Color(0xFFFFC115),
-                                          size: 22,
-                                        ),
-                                        onPressed: () async {
-                                          // First, get the product details from the product ID in the cart item
-                                          final productId = data['productId'];
-                                          try {
-                                            // Fetch the product from your product service
-                                            final productDoc =
-                                                await FirebaseFirestore.instance
-                                                    .collection('products')
-                                                    .doc(productId)
-                                                    .get();
-                                            if (!productDoc.exists) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                    content: Text(
-                                                        'Không thể tìm thấy thông tin sản phẩm')),
-                                              );
-                                              return;
-                                            }
-
-                                            // Convert to Product object
-                                            final product =
-                                                await _productService
-                                                    .getProductByProductId(
-                                                        productId);
-
-                                            // Navigate to the product detail page in edit mode
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ProductDetailScreen(
-                                                  product: product!,
-                                                  color: Colors.red,
-                                                  isEditingCart: true,
-                                                  cartItemId: item.id,
-                                                  initialSizeId: data['sizeId'],
-                                                  initialQuantity:
-                                                      data['quantity'],
-                                                ),
-                                              ),
-                                            );
-                                          } catch (error) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text('Lỗi: $error')),
-                                            );
-                                          }
-                                        },
-                                        constraints: BoxConstraints.tight(
-                                            const Size(24, 24)),
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    data['sizeName'] ?? '',
-                                    style: TextStyle(
-                                      color: Color(0xFF655E5E),
-                                      fontSize: 12,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 16),
+                            child: Row(
+                              children: [
+                                // Product image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    productImg,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (ctx, error, _) => Container(
+                                      width: 60,
+                                      height: 60,
+                                      color: Colors.grey[300],
+                                      child:
+                                          const Icon(Icons.image_not_supported),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  // Price and quantity controls in same row
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                ),
+                                const SizedBox(width: 16),
+
+                                // Product details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
+                                      // Product name and edit icon in same row
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              productName,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.edit,
+                                              color: Color(0xFFFFC115),
+                                              size: 22,
+                                            ),
+                                            onPressed: () async {
+                                              if (product == null) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                      content: Text(
+                                                          'Không thể tìm thấy thông tin sản phẩm')),
+                                                );
+                                                return;
+                                              }
+
+                                              // Navigate to the product detail page in edit mode
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ProductDetailScreen(
+                                                    product: product,
+                                                    color: Colors.red,
+                                                    isEditingCart: true,
+                                                    cartItemId:
+                                                        cartItem.cartItemId,
+                                                    initialSizeId:
+                                                        cartItem.sizeId,
+                                                    initialQuantity:
+                                                        cartItem.quantity,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            constraints: BoxConstraints.tight(
+                                                const Size(24, 24)),
+                                            padding: EdgeInsets.zero,
+                                          ),
+                                        ],
+                                      ),
                                       Text(
-                                        _productService.formatCurrency(
-                                            data['unitPrice'] ?? 0),
+                                        sizeName,
                                         style: const TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF655E5E),
+                                          fontSize: 12,
                                         ),
                                       ),
-                                      // Quantity controls
+                                      const SizedBox(height: 8),
+                                      // Price and quantity controls in same row
                                       Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          InkWell(
-                                            onTap: () {
-                                              int currentQty =
-                                                  data['quantity'] ?? 1;
-                                              if (currentQty > 1) {
-                                                _cartService
-                                                    .updateCartItemQuantity(
-                                                        item.id,
-                                                        currentQty - 1);
-                                              } else {
-                                                _showRemoveItemDialog(item.id,
-                                                    data['productName']);
-                                              }
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                    color: Colors.red),
-                                              ),
-                                              child: const Icon(
-                                                Icons.remove,
-                                                size: 16,
-                                                color: Colors.red,
-                                              ),
+                                          Text(
+                                            _productService.formatCurrency(
+                                                cartItem.unitPrice.toDouble()),
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          Container(
-                                            margin: const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                            width: 24,
-                                            height: 24,
-                                            decoration: const BoxDecoration(
-                                              color: Colors.red,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                '${data['quantity'] ?? 1}',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
+                                          // Quantity controls
+                                          Row(
+                                            children: [
+                                              InkWell(
+                                                onTap: () {
+                                                  if (cartItem.quantity > 1) {
+                                                    _cartService
+                                                        .updateCartItemQuantity(
+                                                            cartItem.cartItemId,
+                                                            cartItem.quantity -
+                                                                1);
+                                                  } else {
+                                                    _showRemoveItemDialog(
+                                                        cartItem.cartItemId,
+                                                        productName);
+                                                  }
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.all(2),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                        color: Colors.red),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.remove,
+                                                    size: 16,
+                                                    color: Colors.red,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          InkWell(
-                                            onTap: () {
-                                              int currentQty =
-                                                  data['quantity'] ?? 1;
-                                              _cartService
-                                                  .updateCartItemQuantity(
-                                                      item.id, currentQty + 1);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                    color: Colors.red),
+                                              Container(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8),
+                                                width: 24,
+                                                height: 24,
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.red,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    '${cartItem.quantity}',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                              child: const Icon(
-                                                Icons.add,
-                                                size: 16,
-                                                color: Colors.red,
+                                              InkWell(
+                                                onTap: () {
+                                                  _cartService
+                                                      .updateCartItemQuantity(
+                                                          cartItem.cartItemId,
+                                                          cartItem.quantity +
+                                                              1);
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.all(2),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                        color: Colors.red),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.add,
+                                                    size: 16,
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                            ],
                                           ),
                                         ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -408,11 +431,13 @@ class _CartScreenState extends State<CartScreen> {
                           child: OutlinedButton(
                             onPressed: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => MenuScreen(
-                                            color: Color(0xFFF00000),
-                                          )));
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MenuScreen(
+                                    color: const Color(0xFFF00000),
+                                  ),
+                                ),
+                              );
                             },
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: Colors.red),
@@ -437,8 +462,13 @@ class _CartScreenState extends State<CartScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading
                                 ? null
-                                : () {
-                                    // Checkout functionality will be implemented later
+                                : () async {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => OrderScreen(),
+                                      ),
+                                    );
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
@@ -469,7 +499,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void _showRemoveItemDialog(String itemId, String? productName) {
+  void _showRemoveItemDialog(String itemId, String productName) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -499,8 +529,16 @@ class _CartScreenState extends State<CartScreen> {
 // Add this extension method to CartService
 extension CartServiceExtension on CartService {
   Future<int> getCartItemCount() async {
-    QuerySnapshot snapshot =
-        await FirebaseFirestore.instance.collection('carts').get();
+    if (currentUserId == null) {
+      throw Exception('User not logged in');
+    }
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserId)
+        .collection('cart')
+        .get();
+
     return snapshot.docs.length;
   }
 }

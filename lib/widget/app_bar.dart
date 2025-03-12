@@ -1,3 +1,4 @@
+import 'package:demo_firebase/screens/cart/cart_screen.dart';
 import 'package:flutter/material.dart';
 
 class CustomHeader extends StatelessWidget {
@@ -32,12 +33,14 @@ class CustomHeader extends StatelessWidget {
               Stack(
                 children: [
                   IconButton(
-                    icon:
-                        Icon(Icons.shopping_cart, size: 32, color: Colors.red),
-                    onPressed: () {
-                      // Xử lý khi bấm giỏ hàng
-                    },
-                  ),
+                      icon: Icon(Icons.shopping_cart,
+                          size: 32, color: Colors.red),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        );
+                      }),
                   Positioned(
                     right: 5,
                     top: 5,
