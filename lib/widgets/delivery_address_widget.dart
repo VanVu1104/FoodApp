@@ -1,4 +1,5 @@
 import 'package:demo_firebase/models/address.dart';
+import 'package:demo_firebase/services/share_pref_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -7,9 +8,7 @@ import '../screens/map_screen.dart';
 import '../services/map_service.dart';
 
 class DeliveryAddressWidget extends StatefulWidget {
-  const DeliveryAddressWidget({
-    Key? key,
-  }) : super(key: key);
+  const DeliveryAddressWidget({super.key});
 
   @override
   State<DeliveryAddressWidget> createState() => _DeliveryAddressWidgetState();
@@ -23,51 +22,46 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
   LatLng? selectedLocation;
   bool isLoading = true;
 
-  // List of pickup addresses
-  // final List<String> pickupAddresses = [
-  //   '32 Trường Sơn, Phường 2, Tân Bình, TP Hồ Chí Minh',
-  //   '828 Sư Vạn Hạnh, phường 12, Quận 10, TP Hồ Chí Minh',
-  //   '32 Trường Sơn, Phường 2, Tân Bình, TP Hồ Chí Minh',
-  //   '52 Ba Gia, Phường 7, Tân Bình, TP Hồ Chí Minh',
-  //   '806 QL22, ấp Mỹ Hoà 3, Hóc Môn, Hồ Chí Minh',
-  // ];
-
-  final List<Address> pickupAddresses = [
-    Address('1', '32 Trường Sơn, Phường 2, Tân Bình, TP Hồ Chí Minh',
-        LatLng(10.8136, 106.6636)),
-    Address('2', '828 Sư Vạn Hạnh, phường 12, Quận 10, TP Hồ Chí Minh',
-        LatLng(10.7769, 106.6673)),
-    Address('3', '52 Ba Gia, Phường 7, Tân Bình, TP Hồ Chí Minh',
-        LatLng(10.8002, 106.6438)),
-    Address('4', '806 QL22, ấp Mỹ Hoà 3, Hóc Môn, Hồ Chí Minh',
-        LatLng(10.8925, 106.5604)),
+  List<Address> pickupAddresses = [
+    Address(
+        addressId: '1',
+        addressName: '32 Trường Sơn, Phường 2, Tân Bình, TP Hồ Chí Minh',
+        latitude: 10.8136,
+        longitude: 106.6636
+    ),
   ];
 
-  Address selectedPickupAddress = Address(
-      '1',
-      '32 Trường Sơn, Phường 2, Tân Bình, TP Hồ Chí Minh',
-      LatLng(10.8136, 106.6636));
+  late Address selectedPickupAddress;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
+    // Set default pickup address once
     selectedPickupAddress = pickupAddresses.first;
 
-    _setCurrentLocationAsInitial();
+    // _fetchAndSetCurrentLocation();
+    // // Initialize data
+    // _initializeLocationData();
+    //
+    // print("DeliveryAddressWidget initialized");
+
+    initial();
   }
 
-  // Get current location and set it as the initial selected address
-  Future<void> _setCurrentLocationAsInitial() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> initial() async {
+    // First, get all address from firebase
+    pickupAddresses = await MapService.getAddressesFromFirebase();
 
-    try {
-      // Get position from map service
+    // Second, check has data in shared preferences
+    bool hasData = await SharePrefService.hasStoredLocationData();
+
+    // if doesn't have data in share prefs we will get current position
+
+    if (!hasData) {
+    
+      // Get current position
       Position? position = await MapService.getCurrentPosition();
-
       if (position != null) {
         // Convert position to LatLng
         LatLng latLng = MapService.positionToLatLng(position);
@@ -76,27 +70,72 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
         String? address = await MapService.getAddressFromLatLng(latLng);
 
         if (address != null) {
-          setState(() {
-            selectedLocation = latLng;
-            selectedAddress = address;
-          });
+          _updateDeliveryAddress(address, latLng);
+
+          print("Set and saved address: $address");
+          print("Set and saved location: Lat ${latLng.latitude}, Lng ${latLng.longitude}");
         }
       }
-    } catch (e) {
-      print("Error getting current location: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
     }
+    // if data is exist we will get data into selected address,
+    // selected location and selected pickup address
+    else {
+      await SharePrefService.printAllSavedData();
+
+      selectedAddress = await SharePrefService.getSelectedAddress();
+      selectedLocation = await SharePrefService.getSelectedLocation();
+      final savedPickupAddress = await SharePrefService.getSelectedPickupAddress();
+
+      if (savedPickupAddress != null) {
+        // Find matching address in the list or add it
+        final existingIndex = pickupAddresses.indexWhere(
+                (address) => address.addressId == savedPickupAddress.addressId
+        );
+
+        setState(() {
+          if (existingIndex >= 0) {
+            selectedPickupAddress = pickupAddresses[existingIndex];
+          } else {
+            // If the saved pickup address isn't in our list, add it
+            pickupAddresses.add(savedPickupAddress);
+            selectedPickupAddress = savedPickupAddress;
+          }
+        });
+        print("Set pickup address: ${selectedPickupAddress.addressName}");
+      }
+
+      print("Loaded address: $selectedAddress");
+      print("Loaded location: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}");
+      print("Loaded pickup address: ${selectedPickupAddress?.addressName}");
+
+    }
+  }
+
+  void _updateSelectedPickupAddress(Address address) {
+    setState(() {
+      selectedPickupAddress = address;
+      isExpanded = false;
+    });
+
+    // Save to SharedPreferences
+    SharePrefService.saveSelectedPickupAddress(address);
+  }
+
+// Call this when returning from MapScreen
+  void _updateDeliveryAddress(String address, LatLng location) {
+    setState(() {
+      selectedAddress = address;
+      selectedLocation = location;
+    });
+
+    // Save to SharedPreferences
+    SharePrefService.saveSelectedAddress(address);
+    SharePrefService.saveSelectedLocation(location);
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
       width: screenWidth,
@@ -231,28 +270,26 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
               ),
               child: Column(
                 children: pickupAddresses
-                    .map((address) =>
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          selectedPickupAddress = address;
-                          isExpanded = false;
-                        });
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: selectedPickupAddress == address
-                              ? Colors.grey.shade100
-                              : Colors.white,
-                        ),
-                        child: Text(
-                          address.addressName,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ))
+                    .map((address) => InkWell(
+                          onTap: () {
+                            setState(() {
+                              _updateSelectedPickupAddress(address);
+                            });
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: selectedPickupAddress == address
+                                  ? Colors.grey.shade100
+                                  : Colors.white,
+                            ),
+                            child: Text(
+                              address.addressName,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ))
                     .toList(),
               ),
             ),
@@ -264,20 +301,17 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        MapScreen(
-                          startPoint: selectedPickupAddress.addressLocation,
-                          initialLocation: selectedLocation,
-                        ),
+                    builder: (context) => MapScreen(
+                      startPoint: LatLng(selectedPickupAddress.latitude,
+                          selectedPickupAddress.longitude),
+                      initialLocation: selectedLocation,
+                    ),
                   ),
                 );
 
                 // Update with the selected location and address
                 if (result != null && result is Map<String, dynamic>) {
-                  setState(() {
-                    selectedAddress = result['address'];
-                    selectedLocation = result['location'];
-                  });
+                  _updateDeliveryAddress(result['address'], result['location']); // Use the new method
                 }
               },
               child: Padding(
@@ -293,8 +327,11 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
                     Expanded(
                       child: Text(
                         selectedAddress ?? "Không tìm thấy vị trí",
-                        style: TextStyle(fontSize: 14, color: selectedAddress ==
-                            null ? Colors.grey : Colors.black),
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: selectedAddress == null
+                                ? Colors.grey
+                                : Colors.black),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

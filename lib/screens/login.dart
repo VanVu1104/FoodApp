@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_firebase/services/auth_service.dart';
 import 'package:demo_firebase/services/register.dart';
-import 'package:demo_firebase/screens/screen_home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'main_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -22,7 +23,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
   String _message = "";
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _rememberMe = false;
   bool _isLoading = false;
 
@@ -85,7 +85,7 @@ class _AuthScreenState extends State<AuthScreen> {
         _saveRememberedUser();
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => MainScreen()),
         );
       } catch (e) {
         setState(() {
@@ -393,10 +393,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => HomeScreen(userData: {
-                                    'name': user.displayName,
-                                    'email': user.email,
-                                  }),
+                                  builder: (context) => MainScreen(),
                                 ),
                               );
                             } else {

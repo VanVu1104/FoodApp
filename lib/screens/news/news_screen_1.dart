@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../widgets/custom_app_bar.dart';
+import '../../widgets/custom_app_bar.dart';
 
 class NewsScreen1 extends StatelessWidget {
   const NewsScreen1({super.key});

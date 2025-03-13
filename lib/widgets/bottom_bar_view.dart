@@ -1,10 +1,9 @@
-import 'package:demo_firebase/screens/news_screen_1.dart';
-import 'package:demo_firebase/screens/news_screen_2.dart';
-import 'package:demo_firebase/screens/screen_home.dart';
+import 'package:demo_firebase/screens/home_screen.dart';
+import 'package:demo_firebase/screens/test_screen.dart';
 import 'package:flutter/material.dart';
 
 class BottomBarView extends StatefulWidget {
-  const BottomBarView({Key? key}) : super(key: key);
+  const BottomBarView({super.key});
 
   @override
   _BottomBarViewState createState() => _BottomBarViewState();
@@ -23,9 +22,10 @@ class _BottomBarViewState extends State<BottomBarView>
     // Center(child: Text("🔔 Thông báo", style: TextStyle(fontSize: 20))),
     // Center(child: Text("👤 Tài khoản", style: TextStyle(fontSize: 20))),
     HomeScreen(),
-    NewsScreen1(),
-    NewsScreen2(),
-    NewsScreen2(),
+    // NewsScreen1(),
+    TestScreen(),
+    TestScreen(),
+    TestScreen(),
   ];
 
   final List<IconData> iconList = [
@@ -64,6 +64,13 @@ class _BottomBarViewState extends State<BottomBarView>
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    _fabAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView(
@@ -76,6 +83,7 @@ class _BottomBarViewState extends State<BottomBarView>
         },
         children: _pages,
       ),
+      extendBody: true,
       floatingActionButton: ScaleTransition(
         scale: _fabScaleAnimation,
         child: FloatingActionButton(
@@ -88,10 +96,10 @@ class _BottomBarViewState extends State<BottomBarView>
             });
             print("Nhấn nút giữa!");
           },
-          child: const Icon(Icons.receipt_long, color: Colors.white),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
+          child: const Icon(Icons.receipt_long, color: Colors.white),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -143,11 +151,5 @@ class _BottomBarViewState extends State<BottomBarView>
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _fabAnimationController.dispose();
-    super.dispose();
   }
 }

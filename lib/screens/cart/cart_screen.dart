@@ -190,15 +190,14 @@ class _CartScreenState extends State<CartScreen> {
                                             }
 
                                             // Convert to Product object
-                                            final product = Product.fromJson(
-                                                productDoc.data()!);
+                                            final product = await _productService.getProductByProductId(productId);
 
                                             // Navigate to the product detail page in edit mode
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     ProductDetailScreen(
-                                                  product: product,
+                                                  product: product!,
                                                   color: Colors.red,
                                                   isEditingCart: true,
                                                   cartItemId: item.id,
