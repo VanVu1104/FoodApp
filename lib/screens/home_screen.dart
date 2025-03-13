@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:demo_firebase/widgets/delivery_address_widget.dart';
 import 'package:demo_firebase/widgets/list_news_widget.dart';
 import 'package:flutter/material.dart';
-
+import 'cart/cart_screen.dart';
 import '../widgets/list_combo_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -71,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   _mustTryContent(),
 
                   _newsContent(),
-
                 ],
               ),
             ),
@@ -114,7 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon:
                         Icon(Icons.shopping_cart, size: 32, color: Colors.red),
                     onPressed: () {
-                      // Xử lý khi bấm giỏ hàng
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CartScreen()),
+                      );
                     },
                   ),
                   Positioned(
@@ -271,7 +273,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Chicken bucket image positioned at the bottom
                       Positioned(
-                        bottom: -35, // Make it extend slightly below the container
+                        bottom:
+                            -35, // Make it extend slightly below the container
                         left: 0,
                         right: 0,
                         child: Center(
@@ -327,7 +330,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           // Chicken bucket image positioned at the bottom
                           Positioned(
-                            bottom: -25, // Make it extend slightly below the container
+                            bottom:
+                                -25, // Make it extend slightly below the container
                             left: 0,
                             right: -10,
                             child: Align(
@@ -378,7 +382,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           // Chicken bucket image positioned at the bottom
                           Positioned(
-                            bottom: -25, // Make it extend slightly below the container
+                            bottom:
+                                -25, // Make it extend slightly below the container
                             left: 0,
                             right: -10,
                             child: Align(
@@ -409,7 +414,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+        Padding(
+          padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
           child: Text(
             textAlign: TextAlign.left,
             'MÓN NGON PHẢI THỬ',
@@ -429,7 +435,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0),
           child: Text(
             textAlign: TextAlign.left,
             'TIN TỨC',

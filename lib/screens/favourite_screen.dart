@@ -1,64 +1,71 @@
-import 'package:demo_firebase/screens/product_detail_screen.dart';
-import 'package:demo_firebase/widgets/custom_loading.dart';
-import 'package:demo_firebase/widgets/product_card_widget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../models/category.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
-import '../widgets/custom_app_bar.dart';
 import '../services/favourite_service.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/custom_loading.dart';
+import '../widgets/product_card_widget.dart';
+import 'package:demo_firebase/screens/product_detail_screen.dart';
 
-class MenuScreen extends StatefulWidget {
-  final String? categoryId;
-  final Color color;
-
-  const MenuScreen({super.key, this.categoryId, required this.color});
+class FavouriteScreen extends StatefulWidget {
+  const FavouriteScreen({super.key});
 
   @override
-  _MenuScreenState createState() => _MenuScreenState();
+  _FavouriteScreenState createState() => _FavouriteScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> {
-  final ProductService _productService = ProductService();
-  late Future<List<Product>> _productsFuture;
+class _FavouriteScreenState extends State<FavouriteScreen> {
   final FavouriteService _favouriteService = FavouriteService();
-// Store favorite status for each product
+  final ProductService _productService = ProductService();
+  late Future<List<Product>> _favouriteProductsFuture;
   Map<String, bool> _favouriteStatus = {};
-  bool _isFavouritesLoaded = false;
+
   @override
   void initState() {
     super.initState();
-
-    if (widget.categoryId != null) {
-      _productsFuture =
-          _productService.getProductsByCategory(widget.categoryId ?? '');
-    } else {
-      _productsFuture = _productService.getProducts();
-    }
-    _loadFavouriteStatus();
+    _loadFavouriteProducts();
   }
 
-// Load favorite status for all products
-  Future<void> _loadFavouriteStatus() async {
+  Future<void> _loadFavouriteProducts() async {
+    setState(() {
+      _favouriteProductsFuture = _fetchFavouriteProducts();
+    });
+  }
+
+  Future<List<Product>> _fetchFavouriteProducts() async {
     try {
       // Get all favorites for the current user
       final favourites = await _favouriteService.getFavourites();
 
-      // Create a map of productId to favorite status for quick lookup
+      // Initialize favorite status map
       Map<String, bool> newStatus = {};
+      List<Product> products = [];
+
+      // Fetch each product by ID
       for (var favourite in favourites) {
-        newStatus[favourite.productId] = true;
+        try {
+          final product =
+              await _productService.getProductByProductId(favourite.productId);
+          if (product != null) {
+            products.add(product);
+            newStatus[favourite.productId] = true;
+          }
+        } catch (e) {
+          print("Error fetching product ${favourite.productId}: $e");
+        }
       }
 
+      // Update favorite status
       if (mounted) {
         setState(() {
           _favouriteStatus = newStatus;
-          _isFavouritesLoaded = true;
         });
       }
+
+      return products;
     } catch (e) {
-      print("Error loading favourite status: $e");
+      print("Error loading favourite products: $e");
+      return [];
     }
   }
 
@@ -71,9 +78,14 @@ class _MenuScreenState extends State<MenuScreen> {
     );
 
     if (mounted) {
-      setState(() {
-        _favouriteStatus[product.productId] = newStatus;
-      });
+      if (!newStatus) {
+        // If product was removed from favorites, reload the list
+        _loadFavouriteProducts();
+      } else {
+        setState(() {
+          _favouriteStatus[product.productId] = newStatus;
+        });
+      }
     }
   }
 
@@ -84,25 +96,52 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: customAppBar(context, 'Thực đơn'),
+      appBar: customAppBar(context, 'Yêu thích'),
       body: Column(
         children: [
-          // Products List
           Expanded(
             child: FutureBuilder<List<Product>>(
-              future: _productsFuture,
+              future: _favouriteProductsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CustomLoading();
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text("Error loading products"));
+                  return Center(child: Text("Lỗi khi tải danh sách yêu thích"));
                 }
                 final products = snapshot.data ?? [];
+                if (products.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/fav_icon.png',
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          "Chưa có sản phẩm yêu thích nào",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(0xFFFD0000),
+                          ),
+                        ),
+                        Text(
+                          "Hãy thêm sản phẩm yêu thích để dễ dàng tìm kiếm",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF000000),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
                 return Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -124,12 +163,12 @@ class _MenuScreenState extends State<MenuScreen> {
                             MaterialPageRoute(
                               builder: (context) => ProductDetailScreen(
                                 product: item,
-                                color: widget.color,
+                                color: Theme.of(context).primaryColor,
                               ),
                             ),
                           ).then((_) {
                             // Reload favorites when returning from product detail
-                            _loadFavouriteStatus();
+                            _loadFavouriteProducts();
                           });
                         },
                         child: ProductCardWidget(
