@@ -1,10 +1,12 @@
-import 'package:demo_firebase/screens/screen_home.dart';
+import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ScreenLoading1 extends StatefulWidget {
+  const ScreenLoading1({super.key});
+
   @override
   _ScreenLoading1State createState() => _ScreenLoading1State();
 }

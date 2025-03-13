@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -5,7 +6,18 @@ import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../models/address.dart';
+
 class MapService {
+  static Future<List<Address>> getAddressesFromFirebase() async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('addresses').get();
+      return querySnapshot.docs.map((doc) => Address.fromJson(doc)).toList();
+    } catch (e) {
+      print('Error fetching addresses: $e');
+      return [];
+    }
+  }
   // Fetch the user's current location
   static Future<Position?> getCurrentPosition() async {
     try {

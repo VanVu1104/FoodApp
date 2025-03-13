@@ -1,6 +1,5 @@
 import 'package:demo_firebase/services/auth_google.dart';
-import 'package:demo_firebase/widget/app_bar.dart';
-import 'package:demo_firebase/widget/bottom_bar_view.dart';
+import 'package:demo_firebase/widgets/bottom_bar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

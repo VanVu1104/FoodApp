@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/product_service.dart';
 import '../services/cart_service.dart';
 import '../services/favourite_service.dart';
+import '../Utils/utils.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -478,7 +479,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               ),
                               Text(
-                                ProductService().formatCurrency(totalPrice),
+                                Utils().formatCurrency(totalPrice),
                                 style: const TextStyle(
                                   color: Colors.red,
                                   fontSize: 20,

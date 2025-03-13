@@ -3,6 +3,7 @@ import 'package:demo_firebase/models/cart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/product.dart';
+import 'package:flutter/material.dart';
 
 class CartService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -318,7 +319,7 @@ class CartService {
     });
   }
 
-// Edit cart item - change size and/or quantity
+  // Edit cart item - change size and/or quantity
   Future<void> editCartItem({
     required String cartItemId,
     required String selectedSizeId,

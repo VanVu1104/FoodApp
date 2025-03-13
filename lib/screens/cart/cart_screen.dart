@@ -10,6 +10,7 @@ import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:demo_firebase/widgets/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/utils.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -264,9 +265,9 @@ class _CartScreenState extends State<CartScreen> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                _productService.formatCurrency(
-                                                    cartItem.unitPrice
-                                                        .toDouble()),
+                                                Utils().formatCurrency(cartItem
+                                                    .unitPrice
+                                                    .toDouble()),
                                                 style: TextStyle(
                                                   color: Colors.red,
                                                   fontWeight: FontWeight.bold,
@@ -438,7 +439,7 @@ class _CartScreenState extends State<CartScreen> {
 
                               final total = snapshot.data ?? 0.0;
                               return Text(
-                                _productService.formatCurrency(total),
+                                Utils().formatCurrency(total),
                                 style: TextStyle(
                                   fontSize: isSmallScreen ? 16 : 18,
                                   color: Colors.red,
