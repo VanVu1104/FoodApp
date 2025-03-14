@@ -1,7 +1,7 @@
 import 'package:demo_firebase/models/product.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import '../utils/utils.dart';
 import '../services/product_service.dart';
 
 class ProductCardWidget extends StatelessWidget {
@@ -71,7 +71,8 @@ class ProductCardWidget extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
-                    overflow: TextOverflow.visible, // Allow text to be fully visible
+                    overflow:
+                        TextOverflow.visible, // Allow text to be fully visible
                     softWrap: true, // Enable text wrapping
                     maxLines: 2, // Limit to 2 lines maximum
                   ),
@@ -112,7 +113,7 @@ class ProductCardWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Text(
-              ProductService().formatCurrency(product.productPrice),
+              Utils().formatCurrency(product.productPrice),
               style: const TextStyle(
                 color: Colors.red,
                 fontWeight: FontWeight.bold,

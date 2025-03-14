@@ -10,6 +10,7 @@ import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:demo_firebase/widgets/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/utils.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -247,19 +248,27 @@ class _CartScreenState extends State<CartScreen> {
                                           color: Color(0xFF655E5E),
                                           fontSize: 12,
                                         ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      // Price and quantity controls in same row
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            _productService.formatCurrency(
-                                                cartItem.unitPrice.toDouble()),
-                                            style: const TextStyle(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.bold,
+                                        SizedBox(height: isSmallScreen ? 4 : 8),
+                                        // Price and quantity controls in same row
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                Utils().formatCurrency(cartItem
+                                                    .unitPrice
+                                                    .toDouble()),
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize:
+                                                      isSmallScreen ? 14 : 16,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
                                           ),
                                           // Quantity controls

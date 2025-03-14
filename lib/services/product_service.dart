@@ -68,11 +68,7 @@ class ProductService {
     }
   }
 
-  String formatCurrency(num amount) {
-    final format = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
-    return format.format(amount);
-  }
- Future<Product?> getProductByProductId(String productId) async {
+  Future<Product?> getProductByProductId(String productId) async {
     try {
       // Fetch the product document directly using its ID
       DocumentSnapshot productDoc = await _firestore
@@ -104,5 +100,6 @@ class ProductService {
       return null;
     }
   }
+ 
 }
 

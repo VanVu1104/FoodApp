@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:demo_firebase/services/auth_service.dart';
-import '../screens/screen_home.dart';
+
+import '../screens/main_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -55,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(userData: userData)),
+        MaterialPageRoute(builder: (context) => MainScreen()),
       );
     } else {
       setState(() {
