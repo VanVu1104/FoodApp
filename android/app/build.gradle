@@ -45,5 +45,11 @@ android {
 flutter {
     source = "../.."
 }
+dependencies { 
+    // implementation fileTree(dir: "E:\\Nam3\\HK2\\Android\\zalopay\\DemoZPDK_Flutter\\ZPDKAndroid", 
+    //                     include: ["*.aar", "*.jar"], 
+    //                     exclude: [""])
+    implementation project(path: ':zpdk-release-v3.1')
+}
 
 apply plugin: 'com.google.gms.google-services'
