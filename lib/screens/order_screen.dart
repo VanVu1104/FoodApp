@@ -1,7 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_firebase/Utils/utils.dart';
 import 'package:demo_firebase/models/cart.dart';
+import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/services/cart_service.dart';
+import 'package:demo_firebase/services/zalopayment.dart';
+import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:demo_firebase/widgets/custom_loading.dart';
 import 'package:demo_firebase/widgets/order_product_card.dart';
 import 'package:flutter/material.dart';
@@ -14,31 +16,22 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  // This will be hardcoded for UI only
   final currencyFormatter =
       NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0);
-  final CartService _cartService = CartService();
+  CartService _cartService = CartService();
+  String _selectedPaymentMethod = "cash";
+  // Method to update the selected payment method
+  void _updatePaymentMethod(String methodId) {
+    setState(() {
+      _selectedPaymentMethod = methodId;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Thông tin đặt hàng',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        elevation: 0.5,
-      ),
+      backgroundColor: Color(0xFFFFFFFF),
+      appBar: customAppBar(context, "Thông tin đặt hàng"),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,6 +371,7 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
+  // Payment methods section moved inside the class
   Widget _buildPaymentMethodsSection() {
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -413,7 +407,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Payment method 1 - Thanh toán tiền mặt (dùng hình ảnh)
+          // Payment method 1 - Cash
           _buildPaymentMethodItem(
             image: Image.asset(
               'assets/cash.png',
@@ -422,10 +416,11 @@ class _OrderScreenState extends State<OrderScreen> {
               fit: BoxFit.fitWidth,
             ),
             name: "Thanh toán tiền mặt",
-            isSelected: true,
+            isSelected: _selectedPaymentMethod == "cash",
+            paymentMethodId: "cash",
           ),
 
-// Payment method 2 - Zalopay (dùng icon)
+          // Payment method 2 - ZaloPay
           _buildPaymentMethodItem(
             image: Image.asset(
               'assets/zalo.png',
@@ -434,135 +429,195 @@ class _OrderScreenState extends State<OrderScreen> {
               fit: BoxFit.fitWidth,
             ),
             name: "Zalopay",
-            isSelected: false,
+            isSelected: _selectedPaymentMethod == "zalopay",
+            paymentMethodId: "zalopay",
           ),
         ],
       ),
     );
   }
 
+  // Update the _buildPaymentMethodItem to handle selection
   Widget _buildPaymentMethodItem({
     IconData? icon,
     Widget? image,
     Color? color,
     required String name,
     required bool isSelected,
+    required String paymentMethodId,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(8),
+    return InkWell(
+      onTap: () => _updatePaymentMethod(paymentMethodId),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: image ??
+                  Icon(
+                    icon,
+                    color: color,
+                    size: 24,
+                  ),
             ),
-            child: image ??
-                Icon(
-                  icon,
-                  color: color,
-                  size: 24,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-          Radio(
-            value: isSelected,
-            groupValue: true,
-            onChanged: (value) {},
-            activeColor: Colors.green,
-          ),
-        ],
+            // Add a radio button or checkmark to show selection
+            isSelected
+                ? Icon(Icons.radio_button_checked, color: Colors.red)
+                : Icon(Icons.radio_button_unchecked, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
 
+  // Update bottom order section to handle the selected payment method
   Widget _buildBottomOrderSection() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                "Tổng thanh toán:",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+    return StreamBuilder<List<CartItem>>(
+      stream: _cartService.getCartItems(),
+      builder: (context, snapshot) {
+        // Calculate subtotal from cart items
+        double subtotal = 0;
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          for (var item in snapshot.data!) {
+            subtotal += item.totalPrice;
+          }
+        }
+        // Format the total using your Utils class
+        String formattedTotal = Utils().formatCurrency(subtotal);
+
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: const Offset(0, -3),
               ),
-              Text(
-                "130.000đ",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Tổng thanh toán:",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    formattedTotal,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_selectedPaymentMethod == "zalopay") {
+                      // Process ZaloPay payment
+                      bool success =
+                          await ZaloPayment.processPayment(context, subtotal);
+                      print("Kết quả: ${success}");
+                      if (success) {
+                        // Handle successful ZaloPay payment
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Thanh toán ZaloPay thành công!"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        // Clear cart and navigate to order confirmation page
+                        await _cartService.clearCart();
+                        // Navigate to confirmation page
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HomeScreen()));
+                      }
+                    } else {
+                      // Handle cash payment
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              "Đặt hàng thành công! Thanh toán khi nhận hàng."),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      // Clear cart and navigate to order confirmation page
+                      await _cartService.clearCart();
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => HomeScreen()));
+                      // Navigate to confirmation page
+                      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => OrderConfirmationScreen()));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    "Đặt món",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                "Đặt món",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyCartMessage() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Giỏ hàng của bạn đang trống',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
           ),
         ],
       ),
     );
   }
-}
-
-Widget _buildEmptyCartMessage() {
-  return const Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
-        SizedBox(height: 16),
-        Text(
-          'Giỏ hàng của bạn đang trống',
-          style: TextStyle(fontSize: 18, color: Colors.grey),
-        ),
-      ],
-    ),
-  );
 }

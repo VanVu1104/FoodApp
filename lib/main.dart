@@ -4,6 +4,7 @@ import 'package:demo_firebase/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
+import 'screens/home_screen.dart';
 import 'screens/screen_loading.dart';
 import 'screens/login.dart'; // Import màn hình đăng nhập
 import 'firebase_options.dart'; // Import Firebase options
@@ -34,7 +35,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => ScreenLoading1(),
         // '/': (context) => ProfileScreen(),
         // '/': (context) => NewsScreen2(),
-        '/login': (context) => AuthScreen(), // Màn hình đăng nhập
+        '/login': (context) => AuthScreen(),
+        '/home': (context) => HomeScreen(), // Màn hình đăng nhập
       },
     );
   }
