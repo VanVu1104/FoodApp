@@ -6,10 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:sprintf/sprintf.dart';
 
 class Utils {
-String formatCurrency(num amount) {
-final format = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
-return format.format(amount);
-}
+  String formatCurrency(num amount) {
+    final format = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    return format.format(amount);
+  }
 
   /// Function Format DateTime to String with layout string
   String formatNumber(double value) {
