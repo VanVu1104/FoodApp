@@ -1,4 +1,5 @@
 import 'package:demo_firebase/models/cart.dart';
+import 'package:demo_firebase/models/cart_item.dart';
 import 'package:demo_firebase/models/product.dart';
 import 'package:demo_firebase/screens/cart/empty_cart_screen.dart';
 import 'package:demo_firebase/screens/menu_screen.dart';
@@ -32,8 +33,8 @@ class _CartScreenState extends State<CartScreen> {
     final bool isMediumScreen = screenWidth >= 360 && screenWidth < 600;
     final double imageSize = isSmallScreen ? 80 : 100;
 
-    return StreamBuilder<List<CartItem>>(
-      stream: _cartService.getCartItems(),
+    return StreamBuilder<Cart?>(
+      stream: _cartService.getCartStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CustomLoading();
@@ -48,11 +49,13 @@ class _CartScreenState extends State<CartScreen> {
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        if (!snapshot.hasData ||
+            snapshot.data == null ||
+            snapshot.data!.cartItem.isEmpty) {
           return const EmptyCartScreen();
         }
-
-        final cartItems = snapshot.data!;
+        final cart = snapshot.data!;
+        final cartItems = cart.cartItem;
 
         return Scaffold(
           appBar: customAppBar(context, 'Giỏ hàng'),
@@ -119,7 +122,7 @@ class _CartScreenState extends State<CartScreen> {
                                       onPressed: () async {
                                         try {
                                           await _cartService
-                                              .undoRemoveFromCart(removedItem);
+                                              .undoRemoveFromCart(removedItem!);
 
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(

@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_firebase/Utils/utils.dart';
 import 'package:demo_firebase/models/cart.dart';
+import 'package:demo_firebase/models/cart_item.dart';
 import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/services/cart_service.dart';
+import 'package:demo_firebase/services/order_service.dart';
 import 'package:demo_firebase/services/zalopayment.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:demo_firebase/widgets/custom_loading.dart';
@@ -20,10 +23,13 @@ class _OrderScreenState extends State<OrderScreen> {
       NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0);
   CartService _cartService = CartService();
   String _selectedPaymentMethod = "cash";
+  late OrderService _orderService;
+
   // Method to update the selected payment method
   void _updatePaymentMethod(String methodId) {
     setState(() {
       _selectedPaymentMethod = methodId;
+      _orderService = OrderService(_cartService);
     });
   }
 
@@ -210,8 +216,8 @@ class _OrderScreenState extends State<OrderScreen> {
         ),
 
         // Thêm StreamBuilder vào danh sách children của Column
-        StreamBuilder<List<CartItem>>(
-          stream: _cartService.getCartItems(),
+        StreamBuilder<Cart?>(
+          stream: _cartService.getCartStream(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CustomLoading());
@@ -221,11 +227,13 @@ class _OrderScreenState extends State<OrderScreen> {
               return Center(child: Text('Lỗi: ${snapshot.error}'));
             }
 
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            if (!snapshot.hasData ||
+                snapshot.data == null ||
+                snapshot.data!.cartItem.isEmpty) {
               return _buildEmptyCartMessage();
             }
-
-            final cartItems = snapshot.data!;
+            final cart = snapshot.data!;
+            final cartItems = cart.cartItem;
 
             return ListView.separated(
               shrinkWrap: true,
@@ -294,13 +302,13 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildPaymentInfoSection() {
-    return StreamBuilder<List<CartItem>>(
-      stream: _cartService.getCartItems(),
+    return StreamBuilder<Cart?>(
+      stream: _cartService.getCartStream(),
       builder: (context, snapshot) {
         // Calculate subtotal from cart items
         double subtotal = 0;
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-          for (var item in snapshot.data!) {
+        if (snapshot.hasData) {
+          for (var item in snapshot.data!.cartItem) {
             subtotal += item.totalPrice;
           }
         }
@@ -488,13 +496,13 @@ class _OrderScreenState extends State<OrderScreen> {
 
   // Update bottom order section to handle the selected payment method
   Widget _buildBottomOrderSection() {
-    return StreamBuilder<List<CartItem>>(
-      stream: _cartService.getCartItems(),
+    return StreamBuilder<Cart?>(
+      stream: _cartService.getCartStream(),
       builder: (context, snapshot) {
         // Calculate subtotal from cart items
         double subtotal = 0;
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-          for (var item in snapshot.data!) {
+        if (snapshot.hasData) {
+          for (var item in snapshot.data!.cartItem) {
             subtotal += item.totalPrice;
           }
         }
@@ -542,44 +550,38 @@ class _OrderScreenState extends State<OrderScreen> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (_selectedPaymentMethod == "zalopay") {
-                      // Process ZaloPay payment
-                      bool success =
-                          await ZaloPayment.processPayment(context, subtotal);
-                      print("Kết quả: ${success}");
-                      if (success) {
-                        // Handle successful ZaloPay payment
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Thanh toán ZaloPay thành công!"),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                        // Clear cart and navigate to order confirmation page
-                        await _cartService.clearCart();
-                        // Navigate to confirmation page
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HomeScreen()));
-                      }
-                    } else {
-                      // Handle cash payment
+                    try {
+                      // Process payment and create order
+                      String orderId =
+                          await _orderService.processPaymentAndCreateOrder(
+                        totalPrice: subtotal,
+                        paymentMethod: _selectedPaymentMethod,
+                        context: context,
+                        pickUpAddress: "828 Sư Vạn Hạnh",
+                      );
+
+                      // Show success message
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(
-                              "Đặt hàng thành công! Thanh toán khi nhận hàng."),
+                              "Thanh toán ${_selectedPaymentMethod} thành công!"),
                           backgroundColor: Colors.green,
                         ),
                       );
-                      // Clear cart and navigate to order confirmation page
-                      await _cartService.clearCart();
+
+                      // Navigate to confirmation page
                       Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) => HomeScreen()));
-                      // Navigate to confirmation page
-                      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => OrderConfirmationScreen()));
+                    } catch (e) {
+                      // Handle error
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Đã xảy ra lỗi: ${e.toString()}"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
