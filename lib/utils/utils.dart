@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:crypto/crypto.dart';
 import 'package:demo_firebase/repo/payment.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +13,23 @@ class Utils {
   String formatNumber(double value) {
     final f = new NumberFormat("#,###", "vi_VN");
     return f.format(value);
+  }
+  
+  double calculateDeliveryFee(double distance) {
+    double distanceInKilometers = distance / 1000;
+
+    double fee;
+
+    if (distanceInKilometers <= 5) {
+      fee = 10000; // Phí cố định cho dưới 5 km
+    } else if (distanceInKilometers <= 10) {
+      fee = 10000 + (distanceInKilometers - 5) * 3000; // 3,000 đ/km từ 5-10 km
+    } else {
+      fee = 25000 + (distanceInKilometers - 10) * 2000; // 2,000 đ/km từ 10 km trở đi
+    }
+
+    // Round down the fee to the nearest 1000
+    return (fee / 1000).floor() * 1000;
   }
 
   /// Function Format DateTime to String with layout string
@@ -42,21 +58,5 @@ class Utils {
     return hmac.convert(utf8.encode(data)).toString();
   }
 
-  double calculateDeliveryFee(double distance) {
-    double distanceInKilometers = distance / 1000;
-
-    double fee;
-
-    if (distanceInKilometers <= 5) {
-      fee = 10000; // Phí cố định cho dưới 5 km
-    } else if (distanceInKilometers <= 10) {
-      fee = 10000 + (distanceInKilometers - 5) * 3000; // 3,000 đ/km từ 5-10 km
-    } else {
-      fee = 25000 + (distanceInKilometers - 10) * 2000; // 2,000 đ/km từ 10 km trở đi
-    }
-
-    // Round down the fee to the nearest 1000
-    return (fee / 1000).floor() * 1000;
-  }
-
+  
 }

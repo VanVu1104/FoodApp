@@ -1,3 +1,4 @@
+import 'package:demo_firebase/screens/menu_screen.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,6 @@ class EmptyCartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
@@ -32,14 +32,14 @@ class EmptyCartScreen extends StatelessWidget {
             Text(
               'Chưa có món nào trong giỏ! Đặt ngay để thưởng thức thôi!',
               style: TextStyle(
-                color: Color(0xFF655E5E),
-                fontSize: 18,
-                fontWeight: FontWeight.w400
-              ),
+                  color: Color(0xFF655E5E),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: height * 0.03),
-            Image.asset('assets/empty_card.png', height: height * 0.2, fit: BoxFit.fitWidth),
+            Image.asset('assets/empty_card.png',
+                height: height * 0.2, fit: BoxFit.fitWidth),
             SizedBox(height: height * 0.03),
             SizedBox(
               width: double.infinity,
