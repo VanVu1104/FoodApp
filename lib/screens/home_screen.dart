@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:demo_firebase/widgets/delivery_address_widget.dart';
 import 'package:demo_firebase/widgets/list_news_widget.dart';
 import 'package:flutter/material.dart';
+import '../widgets/cart_badge.dart';
 import 'cart/cart_screen.dart';
 import '../widgets/list_combo_widget.dart';
 
@@ -64,7 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Banner Slider
                   _slider(),
 
-                  DeliveryAddressWidget(),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: DeliveryAddressWidget(),
+                  ),
 
                   _enjoyNowContent(),
 
@@ -84,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       color: Colors.white, // Màu nền của header
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 20, // Tránh status bar
+        top: MediaQuery.of(context).padding.top + 40, // Tránh status bar
         bottom: 10, // Khoảng cách dưới
         left: 10,
         right: 10,
@@ -107,44 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Xử lý khi bấm tìm kiếm
                 },
               ),
-              Stack(
-                children: [
-                  IconButton(
-                    icon:
-                        Icon(Icons.shopping_cart, size: 32, color: Colors.red),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CartScreen()),
-                      );
-                    },
-                  ),
-                  Positioned(
-                    right: 5,
-                    top: 5,
-                    child: Container(
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.yellow,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        '0', // Số lượng giỏ hàng
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              CartBadge(),
             ],
           ),
         ],

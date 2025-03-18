@@ -1,48 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demo_firebase/models/cart_item.dart';
 
-class CartItem {
-  final String cartItemId;
-  final String productId;
-  final String sizeId;
-  final num unitPrice;
-  final int quantity;
-  final num totalPrice;
+class Cart {
+  final String cartId;
+  final List<CartItem> cartItem;
+  final String userId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  CartItem({
-    required this.cartItemId,
-    required this.productId,
-    required this.sizeId,
-    required this.unitPrice,
-    required this.quantity,
-    required this.totalPrice,
+  Cart({
+    required this.cartId,
+    required this.cartItem,
+    required this.userId,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  // Chuyển đổi từ JSON (Firestore Document) sang CartItem
-  factory CartItem.fromJson(String id, Map<String, dynamic> json) {
-    return CartItem(
-      cartItemId: id,
-      productId: json['productId'] ?? '',
-      sizeId: json['sizeId'] ?? '',
-      unitPrice: json['unitPrice'] ?? 0,
-      quantity: json['quantity'] ?? 1,
-      totalPrice: json['totalPrice'] ?? 0,
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
-      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
+  factory Cart.fromJson(String id, Map<String, dynamic> json) {
+    return Cart(
+      cartId: id, // ID của Cart lấy từ Firestore document ID
+      cartItem: (json['cartItem'] as List<dynamic>?)
+          ?.map((item) => CartItem.fromJson(
+          item['cartItemId'], item as Map<String, dynamic>))
+          .toList() ??
+          [],
+      userId: json['userId'] ?? '',
+      createdAt: json['createdAt'] != null
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? (json['updatedAt'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 
   // Chuyển đổi CartItem sang JSON để lưu vào Firestore
   Map<String, dynamic> toJson() {
     return {
-      'productId': productId,
-      'sizeId': sizeId,
-      'unitPrice': unitPrice,
-      'quantity': quantity,
-      'totalPrice': totalPrice,
+      'cartId': cartId,
+      'cartItem': cartItem.map((item) => item.toJson()).toList(),
+      'userId': userId,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };

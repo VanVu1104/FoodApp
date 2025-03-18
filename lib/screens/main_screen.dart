@@ -7,7 +7,8 @@ import 'package:demo_firebase/services/auth_service.dart';
 import 'package:demo_firebase/screens/login.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -55,7 +56,7 @@ class _MainScreenState extends State<MainScreen> {
 
       //gọi bottom_bar_view
 
-      bottomNavigationBar: BottomBarView(),
+      bottomNavigationBar: BottomBarView(initialIndex: widget.initialIndex),
     );
   }
 }
