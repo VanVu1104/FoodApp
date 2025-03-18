@@ -8,7 +8,7 @@ class Product {
   final String productDescription;
   final bool productStatus;
   final String categoryId;
-  List<ProductSize> sizes; // Make it mutable since we update later
+  List<ProductSize> sizes;  // Make it mutable since we update later
 
   Product({
     required this.productId,

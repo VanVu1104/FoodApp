@@ -1,6 +1,8 @@
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
+import '../main_screen.dart';
+
 class EmptyCartScreen extends StatelessWidget {
   const EmptyCartScreen({super.key});
 
@@ -43,10 +45,10 @@ class EmptyCartScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen(initialIndex: 2)));
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC2626),
+                  backgroundColor: const Color(0xFFFD0000),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
