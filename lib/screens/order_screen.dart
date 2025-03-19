@@ -1,3 +1,4 @@
+
 import 'package:demo_firebase/screens/discount_screen.dart';
 import 'package:demo_firebase/utils/utils.dart';
 import 'package:demo_firebase/models/cart_item.dart';
@@ -254,7 +255,6 @@ class _OrderScreenState extends State<OrderScreen> {
             final item = cartItems[index];
             final product = widget.products
                 .firstWhere((product) => product.productId == item.productId);
-
             return CartItemCard(
               item: item,
               product: product,
@@ -604,8 +604,8 @@ class _OrderScreenState extends State<OrderScreen> {
                         Text("Thanh toán $_selectedPaymentMethod thành công!"),
                     backgroundColor: Colors.green,
                   ),
-                );
 
+                );
                 // Navigate to confirmation page
                 Navigator.pushReplacement(context,
                     MaterialPageRoute(builder: (context) => MainScreen()));

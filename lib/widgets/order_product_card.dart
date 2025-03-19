@@ -18,7 +18,6 @@ class CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     // return FutureBuilder<Product?>(
     //   future: _productService.getProductByProductId(item.productId),
     //   builder: (context, snapshot) {
@@ -117,7 +116,7 @@ class CartItemCard extends StatelessWidget {
     // );
     // Find the size from the product
     final size = product.sizes.firstWhere(
-          (size) => size.sizeId == item.sizeId,
+      (size) => size.sizeId == item.sizeId,
       orElse: () =>
           ProductSize(sizeId: '', sizeName: 'Standard', extraPrice: 0),
     );

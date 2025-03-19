@@ -357,7 +357,8 @@
 // }
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:demo_firebase/models/cart.dart';
+import 'package:demo_firebase/models/cart_item.dart';
+import 'package:demo_firebase/models/cart.dart'; // Make sure to import your Cart model
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/cart_item.dart';
@@ -402,8 +403,7 @@ class CartService {
 
       // Get cart items from subcollection
       final itemsSnapshot =
-      await _cartsRef.doc(cart.cartId).collection('items').get();
-
+          await _cartsRef.doc(cart.cartId).collection('items').get();
       // Convert cart items from documents to CartItem objects
       final cartItems = itemsSnapshot.docs.map((itemDoc) {
         return CartItem.fromJson(
@@ -602,7 +602,7 @@ class CartService {
       // Update existing cart item
       final doc = querySnapshot.docs.first;
       final existingItem =
-      CartItem.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+          CartItem.fromJson(doc.id, doc.data() as Map<String, dynamic>);
 
       final unitPrice = existingItem.unitPrice;
       final newQuantity = existingItem.quantity + quantity;
@@ -617,13 +617,12 @@ class CartService {
     } else {
       // Create new cart item
       final unitPrice =
-      (product.productPrice + selectedSize.extraPrice).toDouble();
+          (product.productPrice + selectedSize.extraPrice).toDouble();
       final now = DateTime.now();
 
       // Generate a unique ID for the cart item
       final String cartItemId =
-      DateTime.now().millisecondsSinceEpoch.toString();
-
+          DateTime.now().millisecondsSinceEpoch.toString();
       // Create a new cart item
       final newCartItem = CartItem(
         cartItemId: cartItemId,
@@ -722,7 +721,7 @@ class CartService {
 
     // Find the item to remove
     int itemIndex =
-    cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
+        cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
     if (itemIndex < 0) {
       throw Exception('Cart item not found');
     }
@@ -778,7 +777,7 @@ class CartService {
 
     // Find the item to update
     int itemIndex =
-    cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
+        cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
     if (itemIndex < 0) {
       throw Exception('Cart item not found');
     }
@@ -858,7 +857,7 @@ class CartService {
 
       // Find the item to update in the local cart object
       int itemIndex =
-      cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
+          cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
       if (itemIndex < 0) {
         throw Exception('Cart item not found');
       }
@@ -871,7 +870,7 @@ class CartService {
 
       // Calculate unit price and total price
       final unitPrice =
-      (product.productPrice + selectedSize.extraPrice).toDouble();
+          (product.productPrice + selectedSize.extraPrice).toDouble();
       final totalPrice = unitPrice * quantity;
 
       // Get the creation date from the existing item
@@ -937,7 +936,7 @@ class CartService {
 
     // Find the item to update in the local cart object
     int itemIndex =
-    cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
+        cart.cartItem.indexWhere((item) => item.cartItemId == cartItemId);
     if (itemIndex < 0) {
       throw Exception('Cart item not found');
     }

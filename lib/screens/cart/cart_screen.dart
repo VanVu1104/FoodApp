@@ -56,12 +56,10 @@ class _CartScreenState extends State<CartScreen> {
             ),
           );
         }
-
         // Show empty cart screen if cart is empty
         if (cartProvider.isEmpty) {
           return const EmptyCartScreen();
         }
-
         // Get cart items and products
         final cartItems = cartProvider.cartItems;
 
