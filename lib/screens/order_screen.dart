@@ -1,29 +1,65 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:demo_firebase/Utils/utils.dart';
-import 'package:demo_firebase/models/cart.dart';
+
+import 'package:demo_firebase/screens/discount_screen.dart';
+import 'package:demo_firebase/utils/utils.dart';
 import 'package:demo_firebase/models/cart_item.dart';
-import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/services/cart_service.dart';
-import 'package:demo_firebase/services/order_service.dart';
-import 'package:demo_firebase/services/zalopayment.dart';
-import 'package:demo_firebase/widgets/custom_app_bar.dart';
-import 'package:demo_firebase/widgets/custom_loading.dart';
 import 'package:demo_firebase/widgets/order_product_card.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'dart:async';
+
+import '../models/cart.dart';
+import '../models/coupon.dart';
+import '../models/product.dart';
+import '../services/discount_service.dart';
+import '../services/map_service.dart';
+import '../services/order_service.dart';
+import '../services/share_pref_service.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/delivery_address_widget.dart';
+import 'main_screen.dart';
 
 class OrderScreen extends StatefulWidget {
-  const OrderScreen({Key? key}) : super(key: key);
+  final List<CartItem> cartItems;
+  final List<Product> products;
+  final double subTotal;
+
+  const OrderScreen(
+      {super.key, required this.cartItems, required this.products, required this.subTotal});
+
   @override
   State<OrderScreen> createState() => _OrderScreenState();
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  final currencyFormatter =
-      NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0);
-  CartService _cartService = CartService();
+  final CartService _cartService = CartService();
+  final _noteController = TextEditingController();
+  double distance = 0;
+  double subTotal = 0;
+  double deliveryFee = 0;
+  double subTotalDiscount = 0;
+  double deliveryFeeDiscount = 0;
+  bool rewardDiscount = false;
+  int paymentMethod = 0;
+  double totalPrice = 0;
+
+  Coupon? selectedOrderCoupon;
+  Coupon? selectedShippingCoupon;
+
   String _selectedPaymentMethod = "cash";
   late OrderService _orderService;
+
+  // Add subscription to listen for distance changes
+  StreamSubscription? _prefSubscription;
+
+  void updateDistance(double dis) {
+    setState(() {
+      distance = dis;
+      deliveryFee = Utils().calculateDeliveryFee(distance);
+    });
+
+    _updateDiscount();
+  }
 
   // Method to update the selected payment method
   void _updatePaymentMethod(String methodId) {
@@ -33,157 +69,154 @@ class _OrderScreenState extends State<OrderScreen> {
     });
   }
 
+  void _updateDiscount() {
+    setState(() {
+      if (selectedOrderCoupon != null) {
+        subTotalDiscount = DiscountService().getDiscountPrice(
+          subTotal,
+          deliveryFee,
+          selectedOrderCoupon!.type,
+          selectedOrderCoupon!.isPercentage,
+          selectedOrderCoupon!.discountValue,
+          selectedOrderCoupon!.maxDiscountValue,
+        );
+      }
+
+      if (selectedShippingCoupon != null) {
+        deliveryFeeDiscount = DiscountService().getDiscountPrice(
+          subTotal,
+          deliveryFee,
+          selectedShippingCoupon!.type,
+          selectedShippingCoupon!.isPercentage,
+          selectedShippingCoupon!.discountValue,
+          selectedShippingCoupon!.maxDiscountValue,
+        );
+      }
+    });
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFFFFFFF),
-      appBar: customAppBar(context, "Thông tin đặt hàng"),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Restaurant info section
-            _buildRestaurantInfo(),
+  void initState() {
+    super.initState();
 
-            // Delivery address section
-            _buildDeliveryAddress(),
+    // Listen for changes to the distance in SharedPreferences
+    _prefSubscription = SharePrefService.preferencesStream.listen((data) {
+      if (data.containsKey('distance') && mounted) {
+        double newDistance = data['distance'];
+        setState(() {
+          distance = newDistance;
+          deliveryFee = Utils().calculateDeliveryFee(newDistance);
+        });
+      }
+    });
 
-            // Order items section
-            _buildOrderItemsSection(),
+    initial();
+  }
 
-            // Order note section
-            _buildOrderNoteSection(),
+  @override
+  void dispose() {
+    // Cancel the subscription when the widget is disposed
+    _prefSubscription?.cancel();
+    _noteController.dispose();
+    super.dispose();
+  }
 
-            // Payment info section - Part 1
-            _buildPaymentInfoSection(),
+  Future<void> initial() async {
 
-            // Payment methods section
-            _buildPaymentMethodsSection(),
+    subTotal = widget.subTotal;
 
-            // Bottom total + order button
-            _buildBottomOrderSection(),
-          ],
+    // Get initial distance from SharedPreferences
+    double initialDistance = await SharePrefService.getSelectedDistance() ?? 0;
+
+    if (mounted) {
+      setState(() {
+        distance = initialDistance;
+        deliveryFee = Utils().calculateDeliveryFee(initialDistance);
+      });
+    }
+  }
+
+  double getTotalPrice() {
+    double discount = rewardDiscount ? 500 : 0;
+    return subTotal + deliveryFee - subTotalDiscount - deliveryFeeDiscount - discount;
+  }
+
+  void openDiscountScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DiscountScreen(
+          subtotal: subTotal,
+          deliveryFee: deliveryFee,
+          initialOrderCoupon: selectedOrderCoupon,
+          initialShippingCoupon: selectedShippingCoupon,
         ),
       ),
     );
+
+    if (result != null) {
+
+
+      setState(() {
+        selectedOrderCoupon = result['orderCoupon'];
+        selectedShippingCoupon = result['shippingCoupon'];
+      });
+
+      _updateDiscount();
+
+    }
   }
 
-  Widget _buildRestaurantInfo() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: customAppBar(context, 'Thông tin đặt hàng'),
+      body: Column(
         children: [
-          // Restaurant logo
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(
-                  20), // Đảm bảo ảnh bo tròn theo Container
-              child: Image.asset(
-                'assets/restaurant.png',
-                fit: BoxFit.fitWidth, // Đảm bảo ảnh hiển thị đầy đủ trong khung
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DeliveryAddressWidget(
+                      onDistanceSelected: updateDistance,
+                    ),
+                    _buildOrderItemsSection(widget.cartItems),
+                    _buildOrderNoteSection(),
+                    _buildPaymentInfoSection(),
+                    _buildPaymentMethodsSection(),
+                  ],
+                ),
               ),
             ),
           ),
 
-          const SizedBox(width: 12),
-
-          // Restaurant details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "CRUNCH & DASH - Sư Vạn Hạnh",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  "828 Sư Vạn Hạnh, Phường 12, Quận 10, Hồ Chí Minh",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
+          // Fixed bottom section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 5,
+                  offset: Offset(0, -2), // Shadow above the bar
                 ),
               ],
             ),
+            child: _buildBottomOrderSection(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDeliveryAddress() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Address icon
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.location_on,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Address details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "174/36 Phạm Phú Thứ",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  "174/36 Phạm Phú Thứ, phường 11, Tân Bình, Hồ Chí Minh",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Edit icon
-          IconButton(
-            icon: const Icon(
-              Icons.edit,
-              color: Colors.amber,
-              size: 20,
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderItemsSection() {
+  Widget _buildOrderItemsSection(List<CartItem> cartItems) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -214,90 +247,65 @@ class _OrderScreenState extends State<OrderScreen> {
             ],
           ),
         ),
-
-        // Thêm StreamBuilder vào danh sách children của Column
-        StreamBuilder<Cart?>(
-          stream: _cartService.getCartStream(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CustomLoading());
-            }
-
-            if (snapshot.hasError) {
-              return Center(child: Text('Lỗi: ${snapshot.error}'));
-            }
-
-            if (!snapshot.hasData ||
-                snapshot.data == null ||
-                snapshot.data!.cartItem.isEmpty) {
-              return _buildEmptyCartMessage();
-            }
-            final cart = snapshot.data!;
-            final cartItems = cart.cartItem;
-
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12.0),
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                return CartItemCard(
-                  item: item,
-                  onTap: () {
-                    // TODO: Xử lý khi nhấn vào item
-                  },
-                );
-              },
-              separatorBuilder: (context, index) => Divider(
-                color: Color(0xFFFFBFBF),
-                thickness: 1,
-                indent: 10,
-                endIndent: 10,
-              ),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: cartItems.length,
+          itemBuilder: (context, index) {
+            final item = cartItems[index];
+            final product = widget.products
+                .firstWhere((product) => product.productId == item.productId);
+            return CartItemCard(
+              item: item,
+              product: product,
             );
           },
+          separatorBuilder: (context, index) => Divider(
+            color: Color(0xFFFFBFBF),
+            thickness: 1,
+            indent: 10,
+            endIndent: 10,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildOrderNoteSection() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Ghi chú đơn hàng",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        const Text(
+          "Ghi chú đơn hàng",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: TextField(
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText:
-                    "Ghi chú đặc biệt cho đơn hàng (vd: thời gian giao hàng mong muốn, yêu cầu lặp đặc biệt...)",
-                hintStyle: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 14,
-                ),
-                contentPadding: const EdgeInsets.all(16),
-                border: InputBorder.none,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: TextField(
+            controller: _noteController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText:
+                  "Ghi chú đặc biệt cho đơn hàng (VD: Thời gian giao hàng mong muốn, thêm sốt,...)",
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 14,
               ),
+              contentPadding: const EdgeInsets.all(16),
+              border: InputBorder.none,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -306,146 +314,202 @@ class _OrderScreenState extends State<OrderScreen> {
       stream: _cartService.getCartStream(),
       builder: (context, snapshot) {
         // Calculate subtotal from cart items
-        double subtotal = 0;
+        double calculatedSubtotal = 0;
         if (snapshot.hasData) {
           for (var item in snapshot.data!.cartItem) {
-            subtotal += item.totalPrice;
+            calculatedSubtotal += item.totalPrice;
           }
+
+          // Update the state's subtotal variable
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && subTotal != calculatedSubtotal) {
+              setState(() {
+                subTotal = calculatedSubtotal;
+              });
+            }
+          });
         }
 
         // Format the subtotal using your Utils class
-        String formattedSubtotal = Utils().formatCurrency(subtotal);
+        String formattedSubtotal = Utils().formatCurrency(calculatedSubtotal);
 
-        return Container(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Thông tin thanh toán",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 12),
+            const Text(
+              "Thông tin thanh toán",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Tạm tính",
+                  style: TextStyle(fontSize: 15),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Tạm tính",
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  Text(
-                    formattedSubtotal,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Phí vận chuyển (5.2 km)",
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  Text(
-                    "20.000đ",
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
+                Text(
+                  formattedSubtotal,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Phí vận chuyển (${MapService.formatDistance(distance)})",
+                  style: TextStyle(fontSize: 15),
+                ),
+                Text(
+                  Utils().formatCurrency(deliveryFee),
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () {
+                openDiscountScreen();
+              },
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     "Chọn mã ưu đãi",
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Icon(
                     Icons.chevron_right,
                     color: Colors.grey[500],
+                    size: 30,
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            if (selectedOrderCoupon != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      selectedOrderCoupon!.couponName,
+                      style: TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    Utils().formatCurrency(subTotalDiscount),
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            if (selectedShippingCoupon != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      selectedShippingCoupon!.couponName,
+                      style: TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    Utils().formatCurrency(deliveryFeeDiscount),
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+          ],
         );
       },
     );
   }
 
-  // Payment methods section moved inside the class
   Widget _buildPaymentMethodsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Thanh toán với điểm thưởng",
-                style: TextStyle(fontSize: 15),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Thanh toán với điểm thưởng",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              Switch(
-                value: false,
-                onChanged: (value) {},
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-          const Text(
-            "Số dư điểm thưởng hiện tại của bạn là 500đ",
-            style: TextStyle(fontSize: 13, color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-
-          const Text(
-            "Phương thức thanh toán",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 12),
-
-          // Payment method 1 - Cash
-          _buildPaymentMethodItem(
-            image: Image.asset(
-              'assets/cash.png',
-              width: 15,
-              height: 15,
-              fit: BoxFit.fitWidth,
+            CupertinoSwitch(
+              value: rewardDiscount,
+              onChanged: (value) {
+                setState(() {
+                  rewardDiscount = value;
+                });
+              },
+              activeTrackColor: Color(0xFFFD0000),
             ),
-            name: "Thanh toán tiền mặt",
-            isSelected: _selectedPaymentMethod == "cash",
-            paymentMethodId: "cash",
-          ),
+          ],
+        ),
+        const Text(
+          "Số dư điểm thưởng hiện tại của bạn là 500đ",
+          style: TextStyle(fontSize: 13, color: Color(0xFF797979)),
+        ),
+        const SizedBox(height: 16),
 
-          // Payment method 2 - ZaloPay
-          _buildPaymentMethodItem(
-            image: Image.asset(
-              'assets/zalo.png',
-              width: 15,
-              height: 15,
-              fit: BoxFit.fitWidth,
-            ),
-            name: "Zalopay",
-            isSelected: _selectedPaymentMethod == "zalopay",
-            paymentMethodId: "zalopay",
+        const Text(
+          "Phương thức thanh toán",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+
+        // Payment method 1 - Cash
+        _buildPaymentMethodItem(
+          image: Image.asset(
+            'assets/cash.png',
+            width: 15,
+            height: 15,
+            fit: BoxFit.fitWidth,
+          ),
+          name: "Thanh toán tiền mặt",
+          isSelected: _selectedPaymentMethod == "cash",
+          paymentMethodId: "cash",
+        ),
+
+        // Payment method 2 - ZaloPay
+        _buildPaymentMethodItem(
+          image: Image.asset(
+            'assets/zalo.png',
+            width: 15,
+            height: 15,
+            fit: BoxFit.fitWidth,
+          ),
+          name: "Zalopay",
+          isSelected: _selectedPaymentMethod == "zalopay",
+          paymentMethodId: "zalopay",
+        ),
+      ],
     );
   }
 
-  // Update the _buildPaymentMethodItem to handle selection
   Widget _buildPaymentMethodItem({
     IconData? icon,
     Widget? image,
@@ -494,132 +558,85 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  // Update bottom order section to handle the selected payment method
   Widget _buildBottomOrderSection() {
-    return StreamBuilder<Cart?>(
-      stream: _cartService.getCartStream(),
-      builder: (context, snapshot) {
-        // Calculate subtotal from cart items
-        double subtotal = 0;
-        if (snapshot.hasData) {
-          for (var item in snapshot.data!.cartItem) {
-            subtotal += item.totalPrice;
-          }
-        }
-        // Format the total using your Utils class
-        String formattedTotal = Utils().formatCurrency(subtotal);
-
-        return Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: const Offset(0, -3),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Tổng thanh toán:",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Tổng thanh toán:",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    formattedTotal,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
+            ),
+            Text(
+              Utils().formatCurrency(getTotalPrice()),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFFD0000),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      // Process payment and create order
-                      String orderId =
-                          await _orderService.processPaymentAndCreateOrder(
-                        totalPrice: subtotal,
-                        paymentMethod: _selectedPaymentMethod,
-                        context: context,
-                        pickUpAddress: "828 Sư Vạn Hạnh",
-                      );
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () async {
+              try {
+                // Process payment and create order
+                String orderId =
+                    await _orderService.processPaymentAndCreateOrder(
+                  totalPrice: getTotalPrice(),
+                  paymentMethod: _selectedPaymentMethod,
+                  context: context,
+                  pickUpAddress: "828 Sư Vạn Hạnh",
+                );
 
-                      // Show success message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "Thanh toán ${_selectedPaymentMethod} thành công!"),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                // Show success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text("Thanh toán $_selectedPaymentMethod thành công!"),
+                    backgroundColor: Colors.green,
+                  ),
 
-                      // Navigate to confirmation page
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => HomeScreen()));
-                    } catch (e) {
-                      // Handle error
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Đã xảy ra lỗi: ${e.toString()}"),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
+                );
+                // Navigate to confirmation page
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => MainScreen()));
+              } catch (e) {
+                // Handle error
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Đã xảy ra lỗi: ${e.toString()}"),
                     backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                   ),
-                  child: const Text(
-                    "Đặt món",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFFD0000),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
+            ),
+            child: const Text(
+              "Đặt món",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyCartMessage() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Giỏ hàng của bạn đang trống',
-            style: TextStyle(fontSize: 18, color: Colors.grey),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

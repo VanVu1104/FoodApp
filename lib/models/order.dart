@@ -6,11 +6,15 @@ import 'coupon.dart';
 class Order {
   final String orderId;
   final String userId;
+  final String? orderCouponId;
+  final String? shippingCouponId;
   final Address pickUpAddress;
   final Address? deliveryAddress;
   final List<CartItem> listCartItem;
   final double deliveryFee;
-  final List<Coupon?> coupon;
+  final double? orderDiscount;
+  final double? deliveryDiscount;
+  final bool rewardDiscount;
   final double rewardedPoint;
   final String paymentMethod;
   final double totalPrice;
@@ -24,11 +28,15 @@ class Order {
   Order(
     this.orderId,
     this.userId,
+    this.orderCouponId,
+    this.shippingCouponId,
     this.pickUpAddress,
     this.deliveryAddress,
     this.listCartItem,
     this.deliveryFee,
-    this.coupon,
+    this.orderDiscount,
+    this.deliveryDiscount,
+    this.rewardDiscount,
     this.rewardedPoint,
     this.paymentMethod,
     this.totalPrice,

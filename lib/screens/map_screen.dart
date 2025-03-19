@@ -440,6 +440,7 @@ class _MapScreenState extends State<MapScreen> {
                         Navigator.pop(context, {
                           'location': _endPoint,
                           'address': _selectedAddress,
+                          'distance': _distance,
                         });
                       },
                       child: Container(
