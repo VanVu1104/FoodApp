@@ -11,7 +11,15 @@ import '../services/map_service.dart';
 
 class DeliveryAddressWidget extends StatefulWidget {
   final Function(double)? onDistanceSelected;
-  const DeliveryAddressWidget({super.key, this.onDistanceSelected});
+  final Function(bool)? onDeliveryStatusChanged;
+  final Function(String, String?, double?, double?)? onAddressesUpdated;
+
+  const DeliveryAddressWidget({
+    super.key,
+    this.onDistanceSelected,
+    this.onDeliveryStatusChanged,
+    this.onAddressesUpdated,
+  });
 
   @override
   State<DeliveryAddressWidget> createState() => _DeliveryAddressWidgetState();
@@ -34,8 +42,7 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
         addressId: '1',
         addressName: '32 Trường Sơn, Phường 2, Tân Bình, TP Hồ Chí Minh',
         latitude: 10.8136,
-        longitude: 106.6636
-    ),
+        longitude: 106.6636),
   ];
 
   late Address selectedPickupAddress;
@@ -49,7 +56,8 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
 
     // Register the stream listener and store the subscription
     _prefSubscription = SharePrefService.preferencesStream.listen((data) {
-      if (!mounted) return; // Check if widget is still mounted before using setState
+      if (!mounted)
+        return; // Check if widget is still mounted before using setState
 
       if (data.containsKey('address')) {
         setState(() {
@@ -70,7 +78,8 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
       }
 
       if (data.containsKey('pickup_address')) {
-        if (mounted) { // Check if still mounted
+        if (mounted) {
+          // Check if still mounted
           setState(() {
             selectedPickupAddress = data['pickup_address'];
           });
@@ -101,20 +110,26 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
     if (!hasData) {
       // Get current position
       Position? position = await MapService.getCurrentPosition();
-      if (position != null && mounted) { // Check if still mounted
+      if (position != null && mounted) {
+        // Check if still mounted
         // Convert position to LatLng
         LatLng latLng = MapService.positionToLatLng(position);
 
         // Get address from coordinates
         String? address = await MapService.getAddressFromLatLng(latLng);
-        double? distance = MapService.calculateDistance(LatLng(selectedPickupAddress.latitude, selectedPickupAddress.longitude), latLng);
+        double? distance = MapService.calculateDistance(
+            LatLng(selectedPickupAddress.latitude,
+                selectedPickupAddress.longitude),
+            latLng);
 
-        if (address != null && mounted) { // Check if still mounted
+        if (address != null && mounted) {
+          // Check if still mounted
           _updateDeliveryAddress(address, latLng, distance);
           _updateSelectedPickupAddress(selectedPickupAddress);
 
           print("Set and saved address: $address");
-          print("Set and saved location: Lat ${latLng.latitude}, Lng ${latLng.longitude}");
+          print(
+              "Set and saved location: Lat ${latLng.latitude}, Lng ${latLng.longitude}");
         }
       }
     }
@@ -125,19 +140,20 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
 
       selectedAddress = await SharePrefService.getSelectedAddress();
       selectedLocation = await SharePrefService.getSelectedLocation();
-      final savedPickupAddress = await SharePrefService.getSelectedPickupAddress();
+      final savedPickupAddress =
+          await SharePrefService.getSelectedPickupAddress();
 
       if (selectedLocation != null) {
         final savedDistance = MapService.calculateDistance(
-            LatLng(selectedPickupAddress.latitude, selectedPickupAddress.longitude),
-            selectedLocation!
-        );
+            LatLng(selectedPickupAddress.latitude,
+                selectedPickupAddress.longitude),
+            selectedLocation!);
 
-        if (savedPickupAddress != null && mounted) { // Check if still mounted
+        if (savedPickupAddress != null && mounted) {
+          // Check if still mounted
           // Find matching address in the list or add it
           final existingIndex = pickupAddresses.indexWhere(
-                  (address) => address.addressId == savedPickupAddress.addressId
-          );
+              (address) => address.addressId == savedPickupAddress.addressId);
 
           setState(() {
             if (existingIndex >= 0) {
@@ -154,7 +170,8 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
       }
 
       print("Loaded address: $selectedAddress");
-      print("Loaded location: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}");
+      print(
+          "Loaded location: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}");
       print("Loaded distance: ${MapService.formatDistance(selectedDistance)}");
       print("Loaded pickup address: ${selectedPickupAddress.addressName}");
     }
@@ -172,8 +189,18 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
       widget.onDistanceSelected!(selectedDistance);
     }
 
+    if (widget.onAddressesUpdated != null) {
+      widget.onAddressesUpdated!(
+          address.addressId,
+          selectedAddress,
+          selectedLocation?.latitude,
+          selectedLocation?.longitude,
+      );
+    }
+
     if (selectedLocation != null) {
-      final newDistance = MapService.calculateDistance(LatLng(address.latitude, address.longitude), selectedLocation!);
+      final newDistance = MapService.calculateDistance(
+          LatLng(address.latitude, address.longitude), selectedLocation!);
       print('new distance: ${MapService.formatDistance(newDistance)}');
 
       // Save to SharedPreferences
@@ -183,7 +210,8 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
   }
 
   // Call this when returning from MapScreen
-  void _updateDeliveryAddress(String address, LatLng location, double distance) {
+  void _updateDeliveryAddress(
+      String address, LatLng location, double distance) {
     if (!mounted) return; // Check if widget is still mounted
 
     setState(() {
@@ -196,6 +224,15 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
       widget.onDistanceSelected!(selectedDistance);
     }
 
+    if (widget.onAddressesUpdated != null) {
+      widget.onAddressesUpdated!(
+        selectedPickupAddress.addressId,
+        address,
+        location.latitude,
+        location.longitude,
+      );
+    }
+
     // Save to SharedPreferences
     SharePrefService.saveSelectedAddress(address);
     SharePrefService.saveSelectedLocation(location);
@@ -204,7 +241,6 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -234,6 +270,9 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
                         isDelivery = true;
                         isExpanded = false;
                       });
+                      if (widget.onDeliveryStatusChanged != null) {
+                        widget.onDeliveryStatusChanged!(true);
+                      }
                     },
                     child: Row(
                       children: [
@@ -263,6 +302,18 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
                         isDelivery = false;
                         isExpanded = false;
                       });
+                      if (widget.onDeliveryStatusChanged != null) {
+                        widget.onDeliveryStatusChanged!(false);
+                      }
+
+                      if (widget.onAddressesUpdated != null) {
+                        widget.onAddressesUpdated!(
+                          selectedPickupAddress.addressId,
+                          selectedAddress,
+                          selectedLocation?.latitude,
+                          selectedLocation?.longitude,
+                        );
+                      }
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -376,9 +427,14 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
                 );
 
                 // Update with the selected location and address
-                if (result != null && result is Map<String, dynamic> && mounted) { // Check if still mounted
-                  _updateDeliveryAddress(result['address'], result['location'], result['distance']); // Use the new method
-                  print('Distance: ${MapService.formatDistance(result['distance'])}');
+                if (result != null &&
+                    result is Map<String, dynamic> &&
+                    mounted) {
+                  // Check if still mounted
+                  _updateDeliveryAddress(result['address'], result['location'],
+                      result['distance']); // Use the new method
+                  print(
+                      'Distance: ${MapService.formatDistance(result['distance'])}');
                 }
               },
               child: Padding(
