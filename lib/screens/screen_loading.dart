@@ -1,4 +1,5 @@
 import 'package:demo_firebase/screens/home_screen.dart';
+import 'package:demo_firebase/screens/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,7 +27,7 @@ class _ScreenLoading1State extends State<ScreenLoading1> {
     if (rememberMe && _auth.currentUser != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => MainScreen()),
       );
     }
   }
