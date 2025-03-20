@@ -6,6 +6,10 @@ import 'package:demo_firebase/models/cart.dart';
 import 'package:demo_firebase/models/cart_item.dart';
 import 'package:flutter/material.dart';
 
+import 'package:demo_firebase/models/order.dart';
+
+import '../models/address.dart';
+
 class OrderService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -76,39 +80,123 @@ class OrderService {
   }
 
   // Process payment and create order
-  Future<String> processPaymentAndCreateOrder({
-    required double totalPrice,
-    required String paymentMethod,
-    required BuildContext context,
-    String pickUpAddress = "",
-    String? deliveryAddress = "",
-    double deliveryFee = 0,
-    dynamic coupon = null,
-    int rewardedPoint = 0,
-    String note = "",
-  }) async {
-    bool paymentSuccess = false;
+  // Future<String> processPaymentAndCreateOrder({
+  //   required double totalPrice,
+  //   required String paymentMethod,
+  //   required BuildContext context,
+  //   String pickUpAddress = "",
+  //   String? deliveryAddress = "",
+  //   double deliveryFee = 0,
+  //   dynamic coupon = null,
+  //   int rewardedPoint = 0,
+  //   String note = "",
+  // }) async {
+  //   bool paymentSuccess = false;
+  //
+  //   // Process payment based on selected method
+  //   if (paymentMethod == "zalopay") {
+  //     paymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
+  //   } else if (paymentMethod == "cash") {
+  //     // Cash payment is automatically successful
+  //     paymentSuccess = true;
+  //   }
+  //
+  //   // If payment successful, create order and clear cart
+  //   if (paymentSuccess) {
+  //     String orderId = await saveOrderFromCart(
+  //       totalPrice: totalPrice,
+  //       paymentMethod: paymentMethod,
+  //       pickUpAddress: pickUpAddress,
+  //       deliveryAddress: deliveryAddress!,
+  //       deliveryFee: deliveryFee,
+  //       coupon: coupon,
+  //       rewardedPoint: rewardedPoint,
+  //       note: note,
+  //     );
+  //
+  //     // Clear cart after successful order
+  //     await _cartService.clearCart();
+  //
+  //     return orderId;
+  //   } else {
+  //     throw Exception("Payment failed");
+  //   }
+  // }
 
-    // Process payment based on selected method
+  /////////////////////////////////// Khai /////////////////////////////////////
+  Future<String> processPaymentAndCreateOrder(
+      String paymentMethod,
+      BuildContext context,
+      String? orderCouponId,
+      String? shippingCouponId,
+      String pickUpAddressId,
+      String? deliveryAddressName,
+      double? deliveryAddressLatitude,
+      double? deliveryAddressLongitude,
+      List<CartItem> listCartItem,
+      double deliveryFee,
+      double? orderDiscount,
+      double? deliveryDiscount,
+      bool rewardDiscount,
+      double rewardedPoint,
+      double totalPrice,
+      String? note,
+      int ratedBar,
+      String? feedback) async {
+    bool isPaymentSuccess = false;
     if (paymentMethod == "zalopay") {
-      paymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
+      isPaymentSuccess =
+          await ZaloPayment.processPayment(context, totalPrice);
     } else if (paymentMethod == "cash") {
       // Cash payment is automatically successful
-      paymentSuccess = true;
+      isPaymentSuccess = true;
     }
 
-    // If payment successful, create order and clear cart
-    if (paymentSuccess) {
-      String orderId = await saveOrderFromCart(
-        totalPrice: totalPrice,
-        paymentMethod: paymentMethod,
-        pickUpAddress: pickUpAddress,
-        deliveryAddress: deliveryAddress!,
-        deliveryFee: deliveryFee,
-        coupon: coupon,
-        rewardedPoint: rewardedPoint,
-        note: note,
-      );
+    if (isPaymentSuccess) {
+      // String orderId = await saveOrderFromCart(
+      //   totalPrice: totalPrice,
+      //   paymentMethod: paymentMethod,
+      //   pickUpAddress: pickUpAddress,
+      //   deliveryAddress: deliveryAddress!,
+      //   deliveryFee: deliveryFee,
+      //   coupon: coupon,
+      //   rewardedPoint: rewardedPoint,
+      //   note: note,
+      // );
+
+      DocumentReference docRef =
+          FirebaseFirestore.instance.collection('orders').doc();
+
+      String orderId = docRef.id;
+
+      final createdAt = DateTime.now();
+      final updatedAt = DateTime.now();
+
+      final orderProduct = OrderProduct(
+          orderId,
+          currentUserId ?? '',
+          orderCouponId,
+          shippingCouponId,
+          pickUpAddressId,
+          deliveryAddressName,
+          deliveryAddressLatitude,
+          deliveryAddressLongitude,
+          listCartItem,
+          deliveryFee,
+          orderDiscount,
+          deliveryDiscount,
+          rewardDiscount,
+          rewardedPoint,
+          paymentMethod,
+          totalPrice,
+          note,
+          'status',
+          ratedBar,
+          feedback,
+          createdAt,
+          updatedAt);
+
+      await docRef.set(orderProduct.toJson());
 
       // Clear cart after successful order
       await _cartService.clearCart();
@@ -118,6 +206,8 @@ class OrderService {
       throw Exception("Payment failed");
     }
   }
+
+  /////////////////////////////////// Khai /////////////////////////////////////
 
   // Get orders for current user
   Future<List<Map<String, dynamic>>> getUserOrders() async {
