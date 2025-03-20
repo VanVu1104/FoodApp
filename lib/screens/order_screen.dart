@@ -24,8 +24,10 @@ class OrderScreen extends StatefulWidget {
   final List<Product> products;
   final double subTotal;
 
-  const OrderScreen(
-      {super.key, required this.cartItems, required this.products, required this.subTotal});
+  const OrderScreen({super.key,
+    required this.cartItems,
+    required this.products,
+    required this.subTotal});
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -41,7 +43,14 @@ class _OrderScreenState extends State<OrderScreen> {
   double deliveryFeeDiscount = 0;
   bool rewardDiscount = false;
   int paymentMethod = 0;
-  double totalPrice = 0;
+  // double totalPrice = 0;
+
+  bool isDelivery = true;
+
+  String pickUpAddressId = '1';
+  String? deliveryAddressName;
+  double? deliveryAddressLatitude;
+  double? deliveryAddressLongitude;
 
   Coupon? selectedOrderCoupon;
   Coupon? selectedShippingCoupon;
@@ -61,11 +70,19 @@ class _OrderScreenState extends State<OrderScreen> {
     _updateDiscount();
   }
 
+  void _updateAddresses(String pickup, String? name, double? latitude, double? longitude) {
+    setState(() {
+      pickUpAddressId = pickup;
+      deliveryAddressName = name;
+      deliveryAddressLatitude = latitude;
+      deliveryAddressLongitude = longitude;
+    });
+  }
+
   // Method to update the selected payment method
   void _updatePaymentMethod(String methodId) {
     setState(() {
       _selectedPaymentMethod = methodId;
-      _orderService = OrderService(_cartService);
     });
   }
 
@@ -82,7 +99,8 @@ class _OrderScreenState extends State<OrderScreen> {
         );
       }
 
-      if (selectedShippingCoupon != null) {
+      // Apply shipping coupon discount only if delivery is enabled
+      if (selectedShippingCoupon != null && isDelivery) {
         deliveryFeeDiscount = DiscountService().getDiscountPrice(
           subTotal,
           deliveryFee,
@@ -91,8 +109,25 @@ class _OrderScreenState extends State<OrderScreen> {
           selectedShippingCoupon!.discountValue,
           selectedShippingCoupon!.maxDiscountValue,
         );
+      } else {
+        deliveryFeeDiscount = 0;
       }
     });
+  }
+
+  void _updateDeliveryStatus(bool status) {
+    setState(() {
+      isDelivery = status;
+      // If delivery is turned off, set delivery fee to 0
+      if (!isDelivery) {
+        deliveryFee = 0;
+        deliveryFeeDiscount = 0; // Also reset any delivery discounts
+      } else {
+        // Restore delivery fee calculation based on distance
+        deliveryFee = Utils().calculateDeliveryFee(distance);
+      }
+    });
+    _updateDiscount(); // Recalculate discounts after changing delivery status
   }
 
   @override
@@ -122,8 +157,10 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> initial() async {
-
+    _orderService = OrderService(_cartService);
     subTotal = widget.subTotal;
+
+    getInitialAddress();
 
     // Get initial distance from SharedPreferences
     double initialDistance = await SharePrefService.getSelectedDistance() ?? 0;
@@ -136,34 +173,50 @@ class _OrderScreenState extends State<OrderScreen> {
     }
   }
 
+  Future<void> getInitialAddress() async {
+    final initialAddress = await SharePrefService.getSelectedPickupAddress();
+    final initialDeliveryAddressName = await SharePrefService.getSelectedAddress();
+    final initialDeliveryAddressLocation = await SharePrefService.getSelectedLocation();
+
+    setState(() {
+      pickUpAddressId = initialAddress?.addressId ?? '';
+      deliveryAddressName = initialDeliveryAddressName;
+      deliveryAddressLatitude = initialDeliveryAddressLocation?.latitude;
+      deliveryAddressLongitude = initialDeliveryAddressLocation?.longitude;
+    });
+  }
+
   double getTotalPrice() {
     double discount = rewardDiscount ? 500 : 0;
-    return subTotal + deliveryFee - subTotalDiscount - deliveryFeeDiscount - discount;
+    return subTotal +
+        (isDelivery ? deliveryFee : 0) -
+        subTotalDiscount -
+        (isDelivery ? deliveryFeeDiscount : 0) -
+        discount;
   }
 
   void openDiscountScreen() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DiscountScreen(
-          subtotal: subTotal,
-          deliveryFee: deliveryFee,
-          initialOrderCoupon: selectedOrderCoupon,
-          initialShippingCoupon: selectedShippingCoupon,
-        ),
+        builder: (context) =>
+            DiscountScreen(
+              subtotal: subTotal,
+              deliveryFee: deliveryFee,
+              isDelivery: isDelivery,
+              initialOrderCoupon: selectedOrderCoupon,
+              initialShippingCoupon: selectedShippingCoupon,
+            ),
       ),
     );
 
     if (result != null) {
-
-
       setState(() {
         selectedOrderCoupon = result['orderCoupon'];
         selectedShippingCoupon = result['shippingCoupon'];
       });
 
       _updateDiscount();
-
     }
   }
 
@@ -184,6 +237,8 @@ class _OrderScreenState extends State<OrderScreen> {
                   children: [
                     DeliveryAddressWidget(
                       onDistanceSelected: updateDistance,
+                      onDeliveryStatusChanged: _updateDeliveryStatus,
+                      onAddressesUpdated: _updateAddresses,
                     ),
                     _buildOrderItemsSection(widget.cartItems),
                     _buildOrderNoteSection(),
@@ -234,7 +289,10 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
               TextButton(
                 onPressed: () {
-                  // TODO: Chức năng thêm món ăn
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MainScreen(initialIndex: 2)));
                 },
                 child: const Text(
                   "Thêm món",
@@ -260,12 +318,13 @@ class _OrderScreenState extends State<OrderScreen> {
               product: product,
             );
           },
-          separatorBuilder: (context, index) => Divider(
-            color: Color(0xFFFFBFBF),
-            thickness: 1,
-            indent: 10,
-            endIndent: 10,
-          ),
+          separatorBuilder: (context, index) =>
+              Divider(
+                color: Color(0xFFFFBFBF),
+                thickness: 1,
+                indent: 10,
+                endIndent: 10,
+              ),
         ),
       ],
     );
@@ -295,7 +354,7 @@ class _OrderScreenState extends State<OrderScreen> {
             maxLines: 3,
             decoration: InputDecoration(
               hintText:
-                  "Ghi chú đặc biệt cho đơn hàng (VD: Thời gian giao hàng mong muốn, thêm sốt,...)",
+              "Ghi chú đặc biệt cho đơn hàng (VD: Thời gian giao hàng mong muốn, thêm sốt,...)",
               hintStyle: TextStyle(
                 color: Colors.grey[400],
                 fontSize: 14,
@@ -360,20 +419,21 @@ class _OrderScreenState extends State<OrderScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Phí vận chuyển (${MapService.formatDistance(distance)})",
-                  style: TextStyle(fontSize: 15),
-                ),
-                Text(
-                  Utils().formatCurrency(deliveryFee),
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
+            if (isDelivery)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Phí vận chuyển (${MapService.formatDistance(distance)})",
+                    style: TextStyle(fontSize: 15),
+                  ),
+                  Text(
+                    Utils().formatCurrency(deliveryFee),
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () {
@@ -416,7 +476,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   ),
                 ],
               ),
-            if (selectedShippingCoupon != null)
+            if (selectedShippingCoupon != null && isDelivery)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -589,19 +649,40 @@ class _OrderScreenState extends State<OrderScreen> {
             onPressed: () async {
               try {
                 // Process payment and create order
-                String orderId =
-                    await _orderService.processPaymentAndCreateOrder(
-                  totalPrice: getTotalPrice(),
-                  paymentMethod: _selectedPaymentMethod,
-                  context: context,
-                  pickUpAddress: "828 Sư Vạn Hạnh",
-                );
+                // String orderId =
+                //     await _orderService.processPaymentAndCreateOrder(
+                //   totalPrice: getTotalPrice(),
+                //   paymentMethod: _selectedPaymentMethod,
+                //   context: context,
+                //   pickUpAddress: "828 Sư Vạn Hạnh",
+                // );
+
+                String orderId = await _orderService
+                    .processPaymentAndCreateOrder(
+                    _selectedPaymentMethod,
+                    context,
+                    selectedOrderCoupon?.couponId,
+                    selectedShippingCoupon?.couponId,
+                    pickUpAddressId,
+                    isDelivery ? deliveryAddressName : null,
+                    isDelivery ? deliveryAddressLatitude : null,
+                    isDelivery ? deliveryAddressLongitude : null,
+                    widget.cartItems,
+                    deliveryFee,
+                    subTotalDiscount,
+                    deliveryFeeDiscount,
+                    rewardDiscount,
+                    getTotalPrice() * 0.001,
+                    getTotalPrice(),
+                    _noteController.text,
+                    0,
+                    null);
 
                 // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content:
-                        Text("Thanh toán $_selectedPaymentMethod thành công!"),
+                    Text("Thanh toán $_selectedPaymentMethod thành công!"),
                     backgroundColor: Colors.green,
                   ),
 
@@ -610,6 +691,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 Navigator.pushReplacement(context,
                     MaterialPageRoute(builder: (context) => MainScreen()));
               } catch (e) {
+                print(e);
                 // Handle error
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
