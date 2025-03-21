@@ -1,3 +1,4 @@
+import 'package:demo_firebase/screens/order/order_history.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import './profile_info.dart';
@@ -101,18 +102,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.red,
-        unselectedItemColor: Colors.black54,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.favorite), label: 'Yêu thích'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle), label: 'Tài khoản'),
-        ],
-      ),
     );
   }
 
@@ -128,14 +117,18 @@ class ProfileScreen extends StatelessWidget {
             MaterialPageRoute(builder: (context) => ProfileInfoPage()),
           );
         }
-        ;
         if (title == 'Mật khẩu & Bảo mật') {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ChangePasswordPage()),
           );
         }
-        ;
+        if (title == 'Lịch sử đơn hàng') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
+          );
+        }
       },
     );
   }

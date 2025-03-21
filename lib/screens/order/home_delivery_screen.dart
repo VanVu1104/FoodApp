@@ -1,12 +1,15 @@
+import 'package:demo_firebase/screens/invoice/invoice_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeDeliveryScreen extends StatelessWidget {
-  const HomeDeliveryScreen({super.key});
+  final String orderId;
+  const HomeDeliveryScreen({Key? key, required this.orderId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    print("HomeDeliveryScreen - orderId: $orderId"); // Kiểm tra orderId
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -18,7 +21,8 @@ class HomeDeliveryScreen extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.all(width * 0.1),
-              child: Image.asset('assets/home_delivery.png', fit: BoxFit.fitWidth),
+              child:
+                  Image.asset('assets/home_delivery.png', fit: BoxFit.fitWidth),
             ),
             SizedBox(height: height * 0.02),
             Text(
@@ -42,7 +46,11 @@ class HomeDeliveryScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              InvoiceScreen(orderId: orderId)));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFDC2626),

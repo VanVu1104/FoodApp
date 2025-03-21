@@ -18,13 +18,13 @@ class _ScreenLoading1State extends State<ScreenLoading1> {
   @override
   void initState() {
     super.initState();
-    _checkAutoLogin();
+    _checkAutoLoginWithEmail();
   }
 
-  void _checkAutoLogin() async {
+  void _checkAutoLoginWithEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool rememberMe = prefs.getBool('rememberMe') ?? false;
-    if (rememberMe && _auth.currentUser != null) {
+    if (rememberMe || _auth.currentUser != null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MainScreen()),
