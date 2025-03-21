@@ -1,5 +1,5 @@
-
 import 'package:demo_firebase/screens/discount_screen.dart';
+import 'package:demo_firebase/screens/order/home_delivery_screen.dart';
 import 'package:demo_firebase/utils/utils.dart';
 import 'package:demo_firebase/models/cart_item.dart';
 import 'package:demo_firebase/services/cart_service.dart';
@@ -24,10 +24,11 @@ class OrderScreen extends StatefulWidget {
   final List<Product> products;
   final double subTotal;
 
-  const OrderScreen({super.key,
-    required this.cartItems,
-    required this.products,
-    required this.subTotal});
+  const OrderScreen(
+      {super.key,
+      required this.cartItems,
+      required this.products,
+      required this.subTotal});
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -70,7 +71,8 @@ class _OrderScreenState extends State<OrderScreen> {
     _updateDiscount();
   }
 
-  void _updateAddresses(String pickup, String? name, double? latitude, double? longitude) {
+  void _updateAddresses(
+      String pickup, String? name, double? latitude, double? longitude) {
     setState(() {
       pickUpAddressId = pickup;
       deliveryAddressName = name;
@@ -175,8 +177,10 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> getInitialAddress() async {
     final initialAddress = await SharePrefService.getSelectedPickupAddress();
-    final initialDeliveryAddressName = await SharePrefService.getSelectedAddress();
-    final initialDeliveryAddressLocation = await SharePrefService.getSelectedLocation();
+    final initialDeliveryAddressName =
+        await SharePrefService.getSelectedAddress();
+    final initialDeliveryAddressLocation =
+        await SharePrefService.getSelectedLocation();
 
     setState(() {
       pickUpAddressId = initialAddress?.addressId ?? '';
@@ -199,14 +203,13 @@ class _OrderScreenState extends State<OrderScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            DiscountScreen(
-              subtotal: subTotal,
-              deliveryFee: deliveryFee,
-              isDelivery: isDelivery,
-              initialOrderCoupon: selectedOrderCoupon,
-              initialShippingCoupon: selectedShippingCoupon,
-            ),
+        builder: (context) => DiscountScreen(
+          subtotal: subTotal,
+          deliveryFee: deliveryFee,
+          isDelivery: isDelivery,
+          initialOrderCoupon: selectedOrderCoupon,
+          initialShippingCoupon: selectedShippingCoupon,
+        ),
       ),
     );
 
@@ -318,13 +321,12 @@ class _OrderScreenState extends State<OrderScreen> {
               product: product,
             );
           },
-          separatorBuilder: (context, index) =>
-              Divider(
-                color: Color(0xFFFFBFBF),
-                thickness: 1,
-                indent: 10,
-                endIndent: 10,
-              ),
+          separatorBuilder: (context, index) => Divider(
+            color: Color(0xFFFFBFBF),
+            thickness: 1,
+            indent: 10,
+            endIndent: 10,
+          ),
         ),
       ],
     );
@@ -354,7 +356,7 @@ class _OrderScreenState extends State<OrderScreen> {
             maxLines: 3,
             decoration: InputDecoration(
               hintText:
-              "Ghi chú đặc biệt cho đơn hàng (VD: Thời gian giao hàng mong muốn, thêm sốt,...)",
+                  "Ghi chú đặc biệt cho đơn hàng (VD: Thời gian giao hàng mong muốn, thêm sốt,...)",
               hintStyle: TextStyle(
                 color: Colors.grey[400],
                 fontSize: 14,
@@ -551,7 +553,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           name: "Thanh toán tiền mặt",
           isSelected: _selectedPaymentMethod == "cash",
-          paymentMethodId: "cash",
+          paymentMethodId: "COD",
         ),
 
         // Payment method 2 - ZaloPay
@@ -564,7 +566,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           name: "Zalopay",
           isSelected: _selectedPaymentMethod == "zalopay",
-          paymentMethodId: "zalopay",
+          paymentMethodId: "Zalo Pay",
         ),
       ],
     );
@@ -657,39 +659,41 @@ class _OrderScreenState extends State<OrderScreen> {
                 //   pickUpAddress: "828 Sư Vạn Hạnh",
                 // );
 
-                String orderId = await _orderService
-                    .processPaymentAndCreateOrder(
-                    _selectedPaymentMethod,
-                    context,
-                    selectedOrderCoupon?.couponId,
-                    selectedShippingCoupon?.couponId,
-                    pickUpAddressId,
-                    isDelivery ? deliveryAddressName : null,
-                    isDelivery ? deliveryAddressLatitude : null,
-                    isDelivery ? deliveryAddressLongitude : null,
-                    widget.cartItems,
-                    deliveryFee,
-                    subTotalDiscount,
-                    deliveryFeeDiscount,
-                    rewardDiscount,
-                    getTotalPrice() * 0.001,
-                    getTotalPrice(),
-                    _noteController.text,
-                    0,
-                    null);
+                String orderId =
+                    await _orderService.processPaymentAndCreateOrder(
+                        _selectedPaymentMethod,
+                        context,
+                        selectedOrderCoupon?.couponId,
+                        selectedShippingCoupon?.couponId,
+                        pickUpAddressId,
+                        isDelivery ? deliveryAddressName : null,
+                        isDelivery ? deliveryAddressLatitude : null,
+                        isDelivery ? deliveryAddressLongitude : null,
+                        widget.cartItems,
+                        deliveryFee,
+                        subTotalDiscount,
+                        deliveryFeeDiscount,
+                        rewardDiscount,
+                        getTotalPrice() * 0.001,
+                        getTotalPrice(),
+                        _noteController.text,
+                        0,
+                        null);
 
                 // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content:
-                    Text("Thanh toán $_selectedPaymentMethod thành công!"),
+                        Text("Thanh toán $_selectedPaymentMethod thành công!"),
                     backgroundColor: Colors.green,
                   ),
-
                 );
                 // Navigate to confirmation page
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => MainScreen()));
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            HomeDeliveryScreen(orderId: orderId)));
               } catch (e) {
                 print(e);
                 // Handle error

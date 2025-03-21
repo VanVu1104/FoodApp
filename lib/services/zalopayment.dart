@@ -10,7 +10,7 @@ class ZaloPayment {
   static Future<bool> processPayment(
       BuildContext context, double subtotal) async {
     try {
-      _listenForPaymentResult(context); // Lắng nghe kết quả thanh toán
+      // _listenForPaymentResult(context); // Lắng nghe kết quả thanh toán
 
       int amount = subtotal.round();
       _showLoadingDialog(context);
@@ -63,37 +63,37 @@ class ZaloPayment {
     );
   }
 
-  static void _listenForPaymentResult(BuildContext context) {
-    const MethodChannel channel = MethodChannel('channelPayOrder');
-    channel.setMethodCallHandler((call) async {
-      if (call.method == "paymentResult") {
-        String result = call.arguments;
-        print("Nhận kết quả từ Native: $result");
-        if (result == "Payment Success") {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Thanh toán ZaloPay thành công!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else if (result == "User Canceled") {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Bạn đã hủy thanh toán."),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Thanh toán thất bại."),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    });
-  }
+  // static void _listenForPaymentResult(BuildContext context) {
+  //   const MethodChannel channel = MethodChannel('channelPayOrder');
+  //   channel.setMethodCallHandler((call) async {
+  //     if (call.method == "paymentResult") {
+  //       String result = call.arguments;
+  //       print("Nhận kết quả từ Native: $result");
+  //       if (result == "Payment Success") {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text("Thanh toán ZaloPay thành công!"),
+  //             backgroundColor: Colors.green,
+  //           ),
+  //         );
+  //       } else if (result == "User Canceled") {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text("Bạn đã hủy thanh toán."),
+  //             backgroundColor: Colors.orange,
+  //           ),
+  //         );
+  //       } else {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text("Thanh toán thất bại."),
+  //             backgroundColor: Colors.red,
+  //           ),
+  //         );
+  //       }
+  //     }
+  //   });
+  // }
 
   // Show error dialog (keeping this method from original code)
   static void _showErrorDialog(BuildContext context, String message) {

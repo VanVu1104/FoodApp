@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../Utils/utils.dart';
+import '../utils/utils.dart';
 import '../models/cart.dart';
 import '../models/cart_item.dart';
 import '../services/product_service.dart';

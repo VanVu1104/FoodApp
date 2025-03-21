@@ -31,7 +31,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-return MultiProvider(
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
@@ -40,7 +40,7 @@ return MultiProvider(
         initialRoute: '/', // Route mặc định
         routes: {
           // '/': (context) => MainScreen(),
-          '/': (context) => SplashScreen(),
+          '/': (context) => ScreenLoading1(),
           // '/': (context) => CartScreen(),
           // '/': (context) => NewsScreen2(),
           '/login': (context) => AuthScreen(), // Màn hình đăng nhập

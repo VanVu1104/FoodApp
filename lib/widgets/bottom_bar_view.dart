@@ -1,4 +1,6 @@
+import 'package:demo_firebase/screens/favourite_screen.dart';
 import 'package:demo_firebase/screens/home_screen.dart';
+import 'package:demo_firebase/screens/profile.dart';
 import 'package:demo_firebase/screens/test_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -23,10 +25,10 @@ class _BottomBarViewState extends State<BottomBarView>
 
   final List<Widget> _pages = [
     HomeScreen(),
-    TestScreen(),
+    FavouriteScreen(),
     CategoryScreen(),
     TestScreen(),
-    TestScreen(),
+    ProfileScreen(),
   ];
 
   @override
