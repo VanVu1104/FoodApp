@@ -37,7 +37,6 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     try {
       // Use the OrderService to get order details
       final orderDetails = await _orderService.getOrderById(widget.orderId);
-      print("orderDetails: ${orderDetails}");
       List<dynamic> cartItems = orderDetails['listCartItem'] ?? [];
       List<Map<String, dynamic>> fullOrderItems = [];
       for (var item in cartItems) {
@@ -214,16 +213,16 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           orderData?['customerPhone'] ?? 'Chưa có thông tin',
                       address: orderData?['deliveryAddressName'] ??
                           'Chưa có thông tin',
-                      deliveryFee:
-                          Utils().formatCurrency(orderData?['deliveryFee']),
-                      orderDiscount:
-                          Utils().formatCurrency(orderData?['orderDiscount']),
-                      deliveryDiscount: Utils()
-                          .formatCurrency(orderData?['deliveryDiscount']),
-                      rewardDiscount: orderData?['rewardDiscount'],
-                      paymentMethod: orderData?['paymentMethod'],
-                      note: orderData?['note'],
-                      status: orderData?['status'],
+                      // deliveryFee:
+                      //     Utils().formatCurrency(orderData?['deliveryFee']),
+                      // orderDiscount:
+                      //     Utils().formatCurrency(orderData?['orderDiscount']),
+                      // deliveryDiscount: Utils()
+                      //     .formatCurrency(orderData?['deliveryDiscount']),
+                      // rewardDiscount: orderData?['rewardDiscount'],
+                      // paymentMethod: orderData?['paymentMethod'],
+                      // note: orderData?['note'],
+                      // status: orderData?['status'],
                     ),
                   ),
 
