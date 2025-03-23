@@ -1,4 +1,3 @@
-
 import 'package:demo_firebase/utils/utils.dart';
 import 'package:demo_firebase/models/zalopay.dart';
 import 'package:http/http.dart' as http;
@@ -6,7 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:sprintf/sprintf.dart';
 
-import '../utils/enpoint.dart';
+import '../utils/endpoint.dart';
 
 class ZaloPayConfig {
   static const String appId = "2554";

@@ -1,18 +1,88 @@
 import 'package:demo_firebase/screens/invoice/custom.dart';
+import 'package:demo_firebase/services/product_service.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:demo_firebase/services/order_service.dart';
+import 'package:demo_firebase/services/cart_service.dart';
+import 'package:demo_firebase/utils/utils.dart'; // Import Utils class
 
-class InvoiceScreen extends StatelessWidget {
-  const InvoiceScreen({Key? key}) : super(key: key);
+class InvoiceScreen extends StatefulWidget {
+  final String orderId;
+
+  const InvoiceScreen({Key? key, required this.orderId}) : super(key: key);
+
+  @override
+  State<InvoiceScreen> createState() => _InvoiceScreenState();
+}
+
+class _InvoiceScreenState extends State<InvoiceScreen> {
+  late OrderService _orderService;
+  final ProductService _productService = ProductService();
+  final Utils _utils = Utils(); // Create an instance of Utils
+  bool isLoading = true;
+  Map<String, dynamic>? orderData;
+  List<dynamic> orderItems = [];
+  num totalPrice = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Properly initialize the OrderService with CartService
+    final cartService = CartService();
+    _orderService = OrderService(cartService);
+    fetchOrderDetails();
+  }
+
+  Future<void> fetchOrderDetails() async {
+    try {
+      // Use the OrderService to get order details
+      final orderDetails = await _orderService.getOrderById(widget.orderId);
+      List<dynamic> cartItems = orderDetails['listCartItem'] ?? [];
+      List<Map<String, dynamic>> fullOrderItems = [];
+      for (var item in cartItems) {
+        String productId = item['productId'].toString();
+
+        final product = await _productService.getProductByProductId(productId);
+
+        if (product != null) {
+          fullOrderItems.add({
+            'productId': productId,
+            'productName': product.productName ?? 'Sản phẩm',
+            'description': product.productDescription ?? 'Không có mô tả',
+            'price': product.productPrice ?? 0,
+            'imagePath': product.productImg,
+            'quantity': item['quantity'] ?? 1,
+          });
+        }
+      }
+      setState(() {
+        orderData = orderDetails;
+        orderItems = fullOrderItems;
+        totalPrice = orderDetails['totalPrice'];
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching order details: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final double containerWidth = MediaQuery.of(context).size.width;
+
+    if (isLoading) {
+      return Scaffold(
+        appBar: customAppBar(context, 'Chi tiết hóa đơn'),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: customAppBar(context, 'Chi tiết hóa đơn'),
       backgroundColor: Colors.white,
-
-      // Use SingleChildScrollView to make the entire content scrollable
       body: Column(
         children: [
           // Header section
@@ -58,6 +128,15 @@ class InvoiceScreen extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  'Mã đơn hàng: ${orderData?['orderId'] ?? widget.orderId}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
               ],
             ),
           ),
@@ -87,31 +166,67 @@ class InvoiceScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // Use ListView.builder for dynamic product list
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: sampleProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = sampleProducts[index];
-                        return OrderItemWidget(
-                          title: product['title']!,
-                          description: product['description']!,
-                          price: product['price']!,
-                          imagePath: product['imagePath']!,
-                        );
-                      },
+                    child: orderItems.isEmpty
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Text(
+                                'Không có sản phẩm nào trong đơn hàng',
+                                style: TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: orderItems.length,
+                            itemBuilder: (context, index) {
+                              final item = orderItems[index];
+                              return OrderItemWidget(
+                                title: item['productName'] ?? 'Sản phẩm',
+                                description:
+                                    item['description'] ?? 'Mô tả sản phẩm',
+                                price:
+                                    _utils.formatCurrency(item['price'] ?? 0),
+                                imagePath: item['imagePath'] ??
+                                    'assets/default_food.png',
+                                quantity: item['quantity'] ?? 1,
+                              );
+                            },
+                          ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // First OrderDetailsWidget with dashed border for recipient info
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 18),
+                    width: containerWidth,
+                    child: OrderDetailsWidget(
+                      useDashedBorder: true,
+                      dashedBorderColor: Colors.red,
+                      backgroundColor: Color(0xFFFFE0E0),
+                      orderId: orderData?['orderId'] ?? widget.orderId,
+                      recipientName:
+                          orderData?['customerName'] ?? 'Chưa có thông tin',
+                      phoneNumber:
+                          orderData?['customerPhone'] ?? 'Chưa có thông tin',
+                      address: orderData?['deliveryAddressName'] ??
+                          'Chưa có thông tin',
+                      // deliveryFee:
+                      //     Utils().formatCurrency(orderData?['deliveryFee']),
+                      // orderDiscount:
+                      //     Utils().formatCurrency(orderData?['orderDiscount']),
+                      // deliveryDiscount: Utils()
+                      //     .formatCurrency(orderData?['deliveryDiscount']),
+                      // rewardDiscount: orderData?['rewardDiscount'],
+                      // paymentMethod: orderData?['paymentMethod'],
+                      // note: orderData?['note'],
+                      // status: orderData?['status'],
                     ),
                   ),
 
                   const SizedBox(height: 16),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    padding: const EdgeInsets.all(8),
-                    width: containerWidth,
-                    child: const OrderDetailsWidget(),
-                  ),
-                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -145,7 +260,7 @@ class InvoiceScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      calculateTotal(),
+                      _utils.formatCurrency(totalPrice),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -156,7 +271,9 @@ class InvoiceScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(
@@ -181,67 +298,4 @@ class InvoiceScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-// Sample products list for demonstration
-final List<Map<String, String>> sampleProducts = [
-  {
-    'title': 'Burger thịt hun khói',
-    'description': 'Burger thịt hun khói với bacon...',
-    'price': '65.000 đ',
-    'imagePath': 'assets/burger.png',
-  },
-  {
-    'title': 'Gà sốt mắm tỏi',
-    'description': 'Gà rán giòn phủ sốt mắm tỏi...',
-    'price': '35.000 đ',
-    'imagePath': 'assets/chicken.png',
-  },
-  {
-    'title': 'Khoai tây chiên',
-    'description': 'Khoai tây chiên vàng giòn...',
-    'price': '30.000 đ',
-    'imagePath': 'assets/fries.png',
-  },
-  // Additional sample items to demonstrate scrolling
-  {
-    'title': 'Coca Cola',
-    'description': 'Nước ngọt có ga...',
-    'price': '15.000 đ',
-    'imagePath': 'assets/drink.png',
-  },
-  {
-    'title': 'Cánh gà sốt cay',
-    'description': 'Cánh gà sốt cay kiểu Buffalo...',
-    'price': '45.000 đ',
-    'imagePath': 'assets/wings.png',
-  },
-];
-
-// Calculate total price from all products
-String calculateTotal() {
-  int total = 0;
-  for (var product in sampleProducts) {
-    // Extract numeric value from price string (e.g., "65.000 đ" -> 65000)
-    String numericString =
-        product['price']!.replaceAll('.', '').replaceAll(' đ', '');
-    total += int.parse(numericString);
-  }
-
-  // Format the total as a price string
-  String formattedTotal = total.toString();
-  // Add thousand separators
-  if (formattedTotal.length > 3) {
-    String result = '';
-    int counter = 0;
-    for (int i = formattedTotal.length - 1; i >= 0; i--) {
-      counter++;
-      result = formattedTotal[i] + result;
-      if (counter % 3 == 0 && i > 0) {
-        result = '.' + result;
-      }
-    }
-    formattedTotal = result;
-  }
-  return formattedTotal + ' đ';
 }

@@ -9,6 +9,9 @@ import '../services/product_service.dart';
 class CartProvider extends ChangeNotifier {
   final CartService _cartService = CartService();
   final ProductService _productService = ProductService();
+  Set<String> _loadingCartItemIds = {};
+  bool isLoadingUpdate(String cartItemId) =>
+      _loadingCartItemIds.contains(cartItemId);
 
   Cart? _cart;
   List<CartItem> _cartItems = [];
@@ -66,6 +69,10 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
+  int get totalItemCount {
+    return _cartItems.fold(0, (sum, item) => sum + item.quantity);
+  }
+
   // Load product data for all cart items
   Future<void> _loadProductsForCartItems() async {
     _products = [];
@@ -75,7 +82,8 @@ class CartProvider extends ChangeNotifier {
       try {
         // Only fetch product if we don't have it already
         if (!_productMap.containsKey(item.productId)) {
-          final product = await _productService.getProductByProductId(item.productId);
+          final product =
+              await _productService.getProductByProductId(item.productId);
           if (product != null) {
             _products.add(product);
             _productMap[item.productId] = product;
@@ -109,7 +117,7 @@ class CartProvider extends ChangeNotifier {
 
     try {
       return product.sizes.firstWhere(
-            (size) => size.sizeId == item.sizeId,
+        (size) => size.sizeId == item.sizeId,
         orElse: () => ProductSize(
           sizeId: '',
           sizeName: 'Unknown Size',
@@ -153,7 +161,8 @@ class CartProvider extends ChangeNotifier {
   }
 
   // Remove item from cart
-  Future<CartItem?> removeFromCart(String cartItemId, BuildContext? context) async {
+  Future<CartItem?> removeFromCart(
+      String cartItemId, BuildContext? context) async {
     try {
       final removedItem = await _cartService.removeFromCart(cartItemId);
 
@@ -202,16 +211,17 @@ class CartProvider extends ChangeNotifier {
   Future<void> updateQuantity(String cartItemId, int quantity) async {
     try {
       await _cartService.updateCartItemQuantity(cartItemId, quantity);
-      // The cart stream will automatically update our state
+      notifyListeners(); // Cập nhật UI
     } catch (e) {
       print('Error updating quantity: $e');
     }
   }
 
   // Show confirmation dialog before removing item
-  Future<bool> showRemoveItemDialog(BuildContext context, String cartItemId) async {
+  Future<bool> showRemoveItemDialog(
+      BuildContext context, String cartItemId) async {
     final cartItem = _cartItems.firstWhere(
-          (item) => item.cartItemId == cartItemId,
+      (item) => item.cartItemId == cartItemId,
       // orElse: () => CartItem(
       //   cartItemId: '',
       //   productId: '',
@@ -230,7 +240,8 @@ class CartProvider extends ChangeNotifier {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xóa sản phẩm'),
-        content: Text('Bạn có muốn xóa ${product.productName} khỏi giỏ hàng không?'),
+        content:
+            Text('Bạn có muốn xóa ${product.productName} khỏi giỏ hàng không?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
