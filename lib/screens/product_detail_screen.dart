@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/product_service.dart';
 import '../services/cart_service.dart';
 import '../services/favourite_service.dart';
-import '../Utils/utils.dart';
+import '../utils/utils.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;

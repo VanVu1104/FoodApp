@@ -56,12 +56,10 @@ class _CartScreenState extends State<CartScreen> {
             ),
           );
         }
-
         // Show empty cart screen if cart is empty
         if (cartProvider.isEmpty) {
           return const EmptyCartScreen();
         }
-
         // Get cart items and products
         final cartItems = cartProvider.cartItems;
 
@@ -76,15 +74,19 @@ class _CartScreenState extends State<CartScreen> {
                     itemCount: cartItems.length,
                     itemBuilder: (context, index) {
                       final cartItem = cartItems[index];
-                      final product = cartProvider.getProductForCartItem(cartItem.productId);
+                      final product = cartProvider
+                          .getProductForCartItem(cartItem.productId);
 
                       if (product == null) {
                         return const SizedBox.shrink();
                       }
 
                       final productName = product.productName;
-                      final productImg = product.productImg.isNotEmpty ? product.productImg : '';
-                      final selectedSize = cartProvider.getSizeForCartItem(cartItem);
+                      final productImg = product.productImg.isNotEmpty
+                          ? product.productImg
+                          : '';
+                      final selectedSize =
+                          cartProvider.getSizeForCartItem(cartItem);
                       final sizeName = selectedSize?.sizeName ?? '';
 
                       return Dismissible(
@@ -97,7 +99,8 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) async {
-                          await cartProvider.removeFromCart(cartItem.cartItemId, context);
+                          await cartProvider.removeFromCart(
+                              cartItem.cartItemId, context);
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -127,7 +130,8 @@ class _CartScreenState extends State<CartScreen> {
                                     width: imageSize,
                                     height: imageSize,
                                     color: Colors.grey[300],
-                                    child: const Icon(Icons.image_not_supported),
+                                    child:
+                                        const Icon(Icons.image_not_supported),
                                   ),
                                 ),
                               ),
@@ -140,7 +144,8 @@ class _CartScreenState extends State<CartScreen> {
                                   children: [
                                     // Product name and edit icon in same row
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
@@ -163,18 +168,23 @@ class _CartScreenState extends State<CartScreen> {
                                             // Navigate to the product detail page in edit mode
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
-                                                builder: (context) => ProductDetailScreen(
+                                                builder: (context) =>
+                                                    ProductDetailScreen(
                                                   product: product,
                                                   color: Colors.red,
                                                   isEditingCart: true,
-                                                  cartItemId: cartItem.cartItemId,
-                                                  initialSizeId: cartItem.sizeId,
-                                                  initialQuantity: cartItem.quantity,
+                                                  cartItemId:
+                                                      cartItem.cartItemId,
+                                                  initialSizeId:
+                                                      cartItem.sizeId,
+                                                  initialQuantity:
+                                                      cartItem.quantity,
                                                 ),
                                               ),
                                             );
                                           },
-                                          constraints: BoxConstraints.tight(const Size(24, 24)),
+                                          constraints: BoxConstraints.tight(
+                                              const Size(24, 24)),
                                           padding: EdgeInsets.zero,
                                         ),
                                       ],
@@ -189,12 +199,15 @@ class _CartScreenState extends State<CartScreen> {
                                     SizedBox(height: isSmallScreen ? 4 : 8),
                                     // Price and quantity controls in same row
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
                                         Flexible(
                                           child: Text(
-                                            Utils().formatCurrency(cartItem.unitPrice.toDouble()),
+                                            Utils().formatCurrency(
+                                                cartItem.unitPrice.toDouble()),
                                             style: TextStyle(
                                               color: Colors.red,
                                               fontWeight: FontWeight.bold,
@@ -214,17 +227,20 @@ class _CartScreenState extends State<CartScreen> {
                                                     cartItem.quantity - 1,
                                                   );
                                                 } else {
-                                                  cartProvider.showRemoveItemDialog(
+                                                  cartProvider
+                                                      .showRemoveItemDialog(
                                                     context,
                                                     cartItem.cartItemId,
                                                   );
                                                 }
                                               },
                                               child: Container(
-                                                padding: EdgeInsets.all(isSmallScreen ? 1 : 2),
+                                                padding: EdgeInsets.all(
+                                                    isSmallScreen ? 1 : 2),
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  border: Border.all(color: Colors.red),
+                                                  border: Border.all(
+                                                      color: Colors.red),
                                                 ),
                                                 child: Icon(
                                                   Icons.remove,
@@ -235,7 +251,8 @@ class _CartScreenState extends State<CartScreen> {
                                             ),
                                             Container(
                                               margin: EdgeInsets.symmetric(
-                                                horizontal: isSmallScreen ? 4 : 8,
+                                                horizontal:
+                                                    isSmallScreen ? 4 : 8,
                                               ),
                                               width: isSmallScreen ? 20 : 24,
                                               height: isSmallScreen ? 20 : 24,
@@ -249,7 +266,8 @@ class _CartScreenState extends State<CartScreen> {
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize: isSmallScreen ? 12 : 14,
+                                                    fontSize:
+                                                        isSmallScreen ? 12 : 14,
                                                   ),
                                                 ),
                                               ),
@@ -262,10 +280,12 @@ class _CartScreenState extends State<CartScreen> {
                                                 );
                                               },
                                               child: Container(
-                                                padding: EdgeInsets.all(isSmallScreen ? 1 : 2),
+                                                padding: EdgeInsets.all(
+                                                    isSmallScreen ? 1 : 2),
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  border: Border.all(color: Colors.red),
+                                                  border: Border.all(
+                                                      color: Colors.red),
                                                 ),
                                                 child: Icon(
                                                   Icons.add,
@@ -304,25 +324,6 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Item count and total
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Số lượng món ăn',
-                            style: TextStyle(
-                                fontSize: isSmallScreen ? 14 : 16,
-                                color: const Color(0xFF655E5E)),
-                          ),
-                          Text(
-                            '${cartItems.length}',
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 14 : 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
                       SizedBox(height: isSmallScreen ? 4 : 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -367,7 +368,9 @@ class _CartScreenState extends State<CartScreen> {
                                 Expanded(child: _buildAddItemsButton(context)),
                                 SizedBox(width: isSmallScreen ? 8 : 12),
                                 // Checkout Button
-                                Expanded(child: _buildCheckoutButton(context, cartProvider)),
+                                Expanded(
+                                    child: _buildCheckoutButton(
+                                        context, cartProvider)),
                               ],
                             );
                           }
@@ -422,29 +425,29 @@ class _CartScreenState extends State<CartScreen> {
       onPressed: _isProcessing
           ? null
           : () async {
-        setState(() {
-          _isProcessing = true;
-        });
+              setState(() {
+                _isProcessing = true;
+              });
 
-        try {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OrderScreen(
-                cartItems: cartProvider.cartItems,
-                products: cartProvider.products,
-                subTotal: cartProvider.cartTotal,
-              ),
-            ),
-          );
-        } finally {
-          if (mounted) {
-            setState(() {
-              _isProcessing = false;
-            });
-          }
-        }
-      },
+              try {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OrderScreen(
+                      cartItems: cartProvider.cartItems,
+                      products: cartProvider.products,
+                      subTotal: cartProvider.cartTotal,
+                    ),
+                  ),
+                );
+              } finally {
+                if (mounted) {
+                  setState(() {
+                    _isProcessing = false;
+                  });
+                }
+              }
+            },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red,
         padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 12 : 16),

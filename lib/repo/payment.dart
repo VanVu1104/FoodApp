@@ -5,7 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:sprintf/sprintf.dart';
 
-import '../utils/enpoint.dart';
+import '../utils/endpoint.dart';
 
 class ZaloPayConfig {
   static const String appId = "2554";

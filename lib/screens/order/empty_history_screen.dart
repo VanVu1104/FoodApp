@@ -2,10 +2,8 @@ import 'package:demo_firebase/screens/menu_screen.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
-import '../main_screen.dart';
-
-class EmptyCartScreen extends StatelessWidget {
-  const EmptyCartScreen({super.key});
+class EmptyOrderScreen extends StatelessWidget {
+  const EmptyOrderScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,15 +12,18 @@ class EmptyCartScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: customAppBar(context, 'Giỏ hàng'),
+      appBar: customAppBar(context, 'Lịch sử đơn hàng'),
       body: Padding(
         padding: EdgeInsets.all(width * 0.05),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Image.asset('assets/history.png',
+                height: height * 0.2, fit: BoxFit.fitWidth),
+            SizedBox(height: height * 0.02),
             Text(
-              'GIỎ HÀNG TRỐNG',
+              'Bạn chưa có hóa đơn nào',
               style: TextStyle(
                   color: Color(0xFFFD0000),
                   fontSize: 26,
@@ -30,7 +31,7 @@ class EmptyCartScreen extends StatelessWidget {
             ),
             SizedBox(height: height * 0.02),
             Text(
-              'Chưa có món nào trong giỏ! Đặt ngay để thưởng thức thôi!',
+              'Hãy đặt CRUNCH & DASH ngay để tận hưởng các ưu đãi từ CRUNCH & DASH',
               style: TextStyle(
                   color: Color(0xFF655E5E),
                   fontSize: 18,
@@ -38,17 +39,20 @@ class EmptyCartScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: height * 0.03),
-            Image.asset('assets/empty_card.png',
-                height: height * 0.2, fit: BoxFit.fitWidth),
-            SizedBox(height: height * 0.03),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen(initialIndex: 2)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MenuScreen(
+                              color: Colors.red,
+                            )),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFD0000),
+                  backgroundColor: const Color(0xFFDC2626),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
@@ -56,7 +60,7 @@ class EmptyCartScreen extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Khám phá thực đơn',
+                  'Đặt ngay',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

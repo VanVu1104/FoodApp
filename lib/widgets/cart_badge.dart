@@ -10,6 +10,8 @@ class CartBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
+        final itemCount = cartProvider.totalItemCount;
+
         return Stack(
           children: [
             IconButton(
@@ -21,30 +23,34 @@ class CartBadge extends StatelessWidget {
                 );
               },
             ),
-            Positioned(
-              right: 5,
-              top: 5,
-              child: Container(
-                padding: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.yellow,
-                  shape: BoxShape.circle,
-                ),
-                constraints: BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                child: Text(
-                  '${cartProvider.cartItems.length}',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+            if (itemCount > 0)
+              Positioned(
+                right: 5,
+                top: 5,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow,
+                    shape:
+                        itemCount > 99 ? BoxShape.rectangle : BoxShape.circle,
+                    borderRadius:
+                        itemCount > 99 ? BorderRadius.circular(8) : null,
                   ),
-                  textAlign: TextAlign.center,
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    itemCount > 99 ? '99+' : '$itemCount',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
           ],
         );
       },

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo_firebase/services/zalopayment.dart';
+import 'package:demo_firebase/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:demo_firebase/services/cart_service.dart';
 import 'package:demo_firebase/models/cart.dart';
@@ -79,50 +80,6 @@ class OrderService {
     }
   }
 
-  // Process payment and create order
-  // Future<String> processPaymentAndCreateOrder({
-  //   required double totalPrice,
-  //   required String paymentMethod,
-  //   required BuildContext context,
-  //   String pickUpAddress = "",
-  //   String? deliveryAddress = "",
-  //   double deliveryFee = 0,
-  //   dynamic coupon = null,
-  //   int rewardedPoint = 0,
-  //   String note = "",
-  // }) async {
-  //   bool paymentSuccess = false;
-  //
-  //   // Process payment based on selected method
-  //   if (paymentMethod == "zalopay") {
-  //     paymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
-  //   } else if (paymentMethod == "cash") {
-  //     // Cash payment is automatically successful
-  //     paymentSuccess = true;
-  //   }
-  //
-  //   // If payment successful, create order and clear cart
-  //   if (paymentSuccess) {
-  //     String orderId = await saveOrderFromCart(
-  //       totalPrice: totalPrice,
-  //       paymentMethod: paymentMethod,
-  //       pickUpAddress: pickUpAddress,
-  //       deliveryAddress: deliveryAddress!,
-  //       deliveryFee: deliveryFee,
-  //       coupon: coupon,
-  //       rewardedPoint: rewardedPoint,
-  //       note: note,
-  //     );
-  //
-  //     // Clear cart after successful order
-  //     await _cartService.clearCart();
-  //
-  //     return orderId;
-  //   } else {
-  //     throw Exception("Payment failed");
-  //   }
-  // }
-
   /////////////////////////////////// Khai /////////////////////////////////////
   Future<String> processPaymentAndCreateOrder(
       String paymentMethod,
@@ -145,25 +102,13 @@ class OrderService {
       String? feedback) async {
     bool isPaymentSuccess = false;
     if (paymentMethod == "zalopay") {
-      isPaymentSuccess =
-          await ZaloPayment.processPayment(context, totalPrice);
+      isPaymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
     } else if (paymentMethod == "cash") {
       // Cash payment is automatically successful
       isPaymentSuccess = true;
     }
 
     if (isPaymentSuccess) {
-      // String orderId = await saveOrderFromCart(
-      //   totalPrice: totalPrice,
-      //   paymentMethod: paymentMethod,
-      //   pickUpAddress: pickUpAddress,
-      //   deliveryAddress: deliveryAddress!,
-      //   deliveryFee: deliveryFee,
-      //   coupon: coupon,
-      //   rewardedPoint: rewardedPoint,
-      //   note: note,
-      // );
-
       DocumentReference docRef =
           FirebaseFirestore.instance.collection('orders').doc();
 
@@ -208,6 +153,22 @@ class OrderService {
   }
 
   /////////////////////////////////// Khai /////////////////////////////////////
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'completed':
+        return 'Giao thành công';
+      case 'cancelled':
+        return 'Đơn hàng hủy';
+      case 'rated':
+        return 'Đã đánh giá';
+      case 'preparing':
+        return 'Đang chuẩn bị';
+      case 'delivering':
+        return 'Đang giao';
+      default:
+        return 'Chờ xác nhận';
+    }
+  }
 
   // Get orders for current user
   Future<List<Map<String, dynamic>>> getUserOrders() async {
@@ -263,6 +224,53 @@ class OrderService {
       print('Error updating order status: $e');
       throw Exception('Failed to update order status: $e');
     }
+  }
+
+// Format order data for display
+  Future<Map<String, dynamic>> formatOrderForDisplay(
+      Map<String, dynamic> order) async {
+    // Format date from Timestamp
+    String formattedDate = '';
+    if (order['createdAt'] != null) {
+      final DateTime dateTime = (order['createdAt'] as Timestamp).toDate();
+      formattedDate =
+          '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
+    String addressName = '';
+
+    if (order['pickUpAddressId'] != null &&
+        order['pickUpAddressId'].isNotEmpty) {
+      try {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('addresses')
+            .where('addressId', isEqualTo: order['pickUpAddressId'])
+            .limit(1)
+            .get();
+        if (querySnapshot.docs.isNotEmpty) {
+          addressName = querySnapshot.docs.first['addressName'] ??
+              'Địa chỉ không xác định';
+        }
+      } catch (e) {
+        print('Lỗi lấy địa chỉ: $e');
+      }
+    }
+    // Lấy danh sách sản phẩm trong đơn hàng
+    List<dynamic> cartItems = order['listCartItem'] ?? [];
+    // Đếm tổng số lượng sản phẩm
+    num totalQuantity =
+        cartItems.fold(0, (sum, item) => sum + (item['quantity'] ?? 0));
+    // Tính tổng tiền đơn hàng
+    double totalPrice =
+        cartItems.fold(0.0, (sum, item) => sum + (item['totalPrice'] ?? 0.0));
+
+    return {
+      'date': formattedDate,
+      'name': addressName,
+      'quantity': '$totalQuantity phần',
+      'price': Utils().formatCurrency(totalPrice),
+      'status': _getStatusText(order['status'] ?? ''),
+      'orderId': order['orderId']
+    };
   }
 
   // Add rating and feedback to order

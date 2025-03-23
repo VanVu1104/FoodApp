@@ -169,32 +169,32 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     ),
                     child: orderItems.isEmpty
                         ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'Không có sản phẩm nào trong đơn hàng',
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                      ),
-                    )
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Text(
+                                'Không có sản phẩm nào trong đơn hàng',
+                                style: TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                          )
                         : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: orderItems.length,
-                      itemBuilder: (context, index) {
-                        final item = orderItems[index];
-                        return OrderItemWidget(
-                          title: item['productName'] ?? 'Sản phẩm',
-                          description:
-                          item['description'] ?? 'Mô tả sản phẩm',
-                          price:
-                          _utils.formatCurrency(item['price'] ?? 0),
-                          imagePath: item['imagePath'] ??
-                              'assets/default_food.png',
-                          quantity: item['quantity'] ?? 1,
-                        );
-                      },
-                    ),
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: orderItems.length,
+                            itemBuilder: (context, index) {
+                              final item = orderItems[index];
+                              return OrderItemWidget(
+                                title: item['productName'] ?? 'Sản phẩm',
+                                description:
+                                    item['description'] ?? 'Mô tả sản phẩm',
+                                price:
+                                    _utils.formatCurrency(item['price'] ?? 0),
+                                imagePath: item['imagePath'] ??
+                                    'assets/default_food.png',
+                                quantity: item['quantity'] ?? 1,
+                              );
+                            },
+                          ),
                   ),
 
                   const SizedBox(height: 16),
@@ -209,9 +209,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       backgroundColor: Color(0xFFFFE0E0),
                       orderId: orderData?['orderId'] ?? widget.orderId,
                       recipientName:
-                      orderData?['customerName'] ?? 'Chưa có thông tin',
+                          orderData?['customerName'] ?? 'Chưa có thông tin',
                       phoneNumber:
-                      orderData?['customerPhone'] ?? 'Chưa có thông tin',
+                          orderData?['customerPhone'] ?? 'Chưa có thông tin',
                       address: orderData?['deliveryAddressName'] ??
                           'Chưa có thông tin',
                       // deliveryFee:
