@@ -206,13 +206,13 @@ class OrderItemWidget extends StatelessWidget {
 
 // Updated OrderDetailsWidget with combined functionality
 class OrderDetailsWidget extends StatelessWidget {
-  final String deliveryFee;
-  final String orderDiscount;
-  final String deliveryDiscount;
-  final bool rewardDiscount;
-  final String paymentMethod;
-  final String note;
-  final String status;
+  // final String deliveryFee;
+  // final String orderDiscount;
+  // final String deliveryDiscount;
+  // final bool rewardDiscount;
+  // final String paymentMethod;
+  // final String note;
+  // final String status;
 
   // Additional fields for recipient information
   final String? orderId;
@@ -227,13 +227,13 @@ class OrderDetailsWidget extends StatelessWidget {
 
   const OrderDetailsWidget({
     Key? key,
-    required this.deliveryFee,
-    required this.orderDiscount,
-    required this.deliveryDiscount,
-    required this.rewardDiscount,
-    required this.paymentMethod,
-    required this.note,
-    required this.status,
+    // required this.deliveryFee,
+    // required this.orderDiscount,
+    // required this.deliveryDiscount,
+    // required this.rewardDiscount,
+    // required this.paymentMethod,
+    // required this.note,
+    // required this.status,
     this.orderId,
     this.recipientName,
     this.phoneNumber,
@@ -263,16 +263,16 @@ class OrderDetailsWidget extends StatelessWidget {
             address != null)
           const SizedBox(height: 16),
 
-        // Payment and delivery details
-        _buildDetailRow('Phí vận chuyển', deliveryFee),
-        _buildDetailRow('Giảm giá đơn hàng', orderDiscount),
-        _buildDetailRow('Giảm giá vận chuyển', deliveryDiscount),
-        _buildDetailRow(
-            'Giảm giá từ điểm thưởng', rewardDiscount ? '500 đ' : '0 đ'),
-        const Divider(height: 24),
-        _buildDetailRow('Phương thức thanh toán', paymentMethod),
-        if (note.isNotEmpty) _buildDetailRow('Ghi chú', note),
-        _buildDetailRow('Trạng thái đơn hàng', status, isHighlighted: true),
+        // // Payment and delivery details
+        // _buildDetailRow('Phí vận chuyển', deliveryFee),
+        // _buildDetailRow('Giảm giá đơn hàng', orderDiscount),
+        // _buildDetailRow('Giảm giá vận chuyển', deliveryDiscount),
+        // _buildDetailRow(
+        //     'Giảm giá từ điểm thưởng', rewardDiscount ? '500 đ' : '0 đ'),
+        // const Divider(height: 24),
+        // _buildDetailRow('Phương thức thanh toán', paymentMethod),
+        // if (note.isNotEmpty) _buildDetailRow('Ghi chú', note),
+        // _buildDetailRow('Trạng thái đơn hàng', status, isHighlighted: true),
       ],
     );
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/favourite_service.dart';
+import '../widgets/cart_badge.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_loading.dart';
 import '../widgets/product_card_widget.dart';
@@ -98,7 +99,22 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: customAppBar(context, 'Yêu thích'),
+      appBar: AppBar(
+        title: Padding(
+          padding: EdgeInsets.only(top: 20.0),
+          child: Text(
+            "Yêu thích",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        toolbarHeight: 100,
+      ),
       body: Column(
         children: [
           Expanded(

@@ -80,50 +80,6 @@ class OrderService {
     }
   }
 
-  // Process payment and create order
-  // Future<String> processPaymentAndCreateOrder({
-  //   required double totalPrice,
-  //   required String paymentMethod,
-  //   required BuildContext context,
-  //   String pickUpAddress = "",
-  //   String? deliveryAddress = "",
-  //   double deliveryFee = 0,
-  //   dynamic coupon = null,
-  //   int rewardedPoint = 0,
-  //   String note = "",
-  // }) async {
-  //   bool paymentSuccess = false;
-  //
-  //   // Process payment based on selected method
-  //   if (paymentMethod == "zalopay") {
-  //     paymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
-  //   } else if (paymentMethod == "cash") {
-  //     // Cash payment is automatically successful
-  //     paymentSuccess = true;
-  //   }
-  //
-  //   // If payment successful, create order and clear cart
-  //   if (paymentSuccess) {
-  //     String orderId = await saveOrderFromCart(
-  //       totalPrice: totalPrice,
-  //       paymentMethod: paymentMethod,
-  //       pickUpAddress: pickUpAddress,
-  //       deliveryAddress: deliveryAddress!,
-  //       deliveryFee: deliveryFee,
-  //       coupon: coupon,
-  //       rewardedPoint: rewardedPoint,
-  //       note: note,
-  //     );
-  //
-  //     // Clear cart after successful order
-  //     await _cartService.clearCart();
-  //
-  //     return orderId;
-  //   } else {
-  //     throw Exception("Payment failed");
-  //   }
-  // }
-
   /////////////////////////////////// Khai /////////////////////////////////////
   Future<String> processPaymentAndCreateOrder(
       String paymentMethod,
@@ -153,17 +109,6 @@ class OrderService {
     }
 
     if (isPaymentSuccess) {
-      // String orderId = await saveOrderFromCart(
-      //   totalPrice: totalPrice,
-      //   paymentMethod: paymentMethod,
-      //   pickUpAddress: pickUpAddress,
-      //   deliveryAddress: deliveryAddress!,
-      //   deliveryFee: deliveryFee,
-      //   coupon: coupon,
-      //   rewardedPoint: rewardedPoint,
-      //   note: note,
-      // );
-
       DocumentReference docRef =
           FirebaseFirestore.instance.collection('orders').doc();
 
@@ -292,6 +237,7 @@ class OrderService {
           '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
     String addressName = '';
+
     if (order['pickUpAddressId'] != null &&
         order['pickUpAddressId'].isNotEmpty) {
       try {
