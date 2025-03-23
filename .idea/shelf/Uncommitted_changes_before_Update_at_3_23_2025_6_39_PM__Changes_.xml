@@ -1,0 +1,14 @@
+<changelist name="Uncommitted_changes_before_Update_at_3_23_2025_6_39_PM_[Changes]" date="1742729946262" recycled="false" toDelete="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_3_23_2025_6_39_PM_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 3/23/2025 6:39 PM [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" />
+    <option name="AFTER_PATH" value="android/zpdk-release-v3.1/zpdk-release-28052021.aar" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_3_23_2025_6_39_PM_[Changes]/zpdk-release-28052021.aar" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" />
+    <option name="AFTER_PATH" value="android/zpdk-release-v3.1/zpdk-release-v3.1.aar" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_3_23_2025_6_39_PM_[Changes]/zpdk-release-v3.1.aar" />
+  </binary>
+</changelist>
