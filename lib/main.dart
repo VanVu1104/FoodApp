@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/', // Route mặc định
         routes: {
           // '/': (context) => MainScreen(),
-          '/': (context) => SplashScreen(),
+          '/': (context) => ScreenLoading1(),
           // '/': (context) => CartScreen(),
           // '/': (context) => NewsScreen2(),
           '/login': (context) => AuthScreen(), // Màn hình đăng nhập

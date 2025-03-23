@@ -20,9 +20,9 @@ class Cart {
     return Cart(
       cartId: id, // ID của Cart lấy từ Firestore document ID
       cartItem: (json['cartItem'] as List<dynamic>?)
-          ?.map((item) => CartItem.fromJson(
-          item['cartItemId'], item as Map<String, dynamic>))
-          .toList() ??
+              ?.map((item) => CartItem.fromJson(
+                  item['cartItemId'], item as Map<String, dynamic>))
+              .toList() ??
           [],
       userId: json['userId'] ?? '',
       createdAt: json['createdAt'] != null
