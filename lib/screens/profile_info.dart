@@ -213,12 +213,10 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
             firstDate: DateTime(1900),
             lastDate: DateTime.now(),
           );
-          if (pickedDate != null) {
-            setState(() {
-              controller.text = controller.text =
-                  '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
-            });
-          }
+          setState(() {
+            controller.text = controller.text =
+                '${pickedDate?.day.toString().padLeft(2, '0')}/${pickedDate?.month.toString().padLeft(2, '0')}/${pickedDate?.year}';
+          });
         },
       ),
     );
