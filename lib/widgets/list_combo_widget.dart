@@ -36,8 +36,8 @@ class ListComboWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: 200,
+      width: MediaQuery.of(context).size.width,
+      height: 200,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: menuItems.length,
@@ -55,8 +55,8 @@ class ListComboWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-      decoration: BoxDecoration(
+        width: MediaQuery.of(context).size.width * 0.9,
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
