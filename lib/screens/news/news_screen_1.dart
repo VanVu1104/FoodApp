@@ -23,7 +23,7 @@ class NewsScreen1 extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Banner
-              Image.asset('assets/news_banner_1.png', fit: BoxFit.fitWidth),
+              Image.asset('assets/news_banner_1.jpg', fit: BoxFit.fitWidth),
 
               // Main Content
               Padding(
