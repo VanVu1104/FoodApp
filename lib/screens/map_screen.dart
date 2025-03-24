@@ -1,3 +1,4 @@
+import 'package:demo_firebase/widgets/custom_loading.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -18,7 +19,6 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-
   // Will hold tap position
   LatLng? _endPoint;
 
@@ -73,9 +73,7 @@ class _MapScreenState extends State<MapScreen> {
       Position? position = await MapService.getCurrentPosition();
 
       if (position != null) {
-
         setState(() {
-
           // If no end point was set, set current location as end point too
           if (_endPoint == null) {
             _endPoint = widget.startPoint;
@@ -83,10 +81,14 @@ class _MapScreenState extends State<MapScreen> {
           }
 
           // Move map to current position
-          _mapController.move(widget.startPoint, 13);
+          _mapController.move(
+              LatLng(position.latitude, position.longitude), 18);
 
           // Get the route if we have both points
           if (_endPoint != null) {
+            _endPoint = LatLng(position.latitude, position.longitude);
+            _getAddressFromLatLng(_endPoint!);
+            _updateDistance();
             _getRoute();
           }
         });
@@ -116,7 +118,8 @@ class _MapScreenState extends State<MapScreen> {
     });
 
     try {
-      List<LatLng> routePoints = await MapService.getRoute(widget.startPoint, _endPoint!);
+      List<LatLng> routePoints =
+          await MapService.getRoute(widget.startPoint, _endPoint!);
 
       setState(() {
         _routePoints = routePoints;
@@ -160,7 +163,8 @@ class _MapScreenState extends State<MapScreen> {
     });
 
     try {
-      List<Map<String, dynamic>> results = await MapService.searchAddress(query);
+      List<Map<String, dynamic>> results =
+          await MapService.searchAddress(query);
 
       setState(() {
         _searchResults = results;
@@ -216,7 +220,8 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
         actions: [
-          IconButton(onPressed: _getCurrentLocation, icon: Icon(Icons.my_location)),
+          IconButton(
+              onPressed: _getCurrentLocation, icon: Icon(Icons.my_location)),
           SizedBox(width: 10)
         ],
         backgroundColor: Colors.white,
@@ -243,7 +248,8 @@ class _MapScreenState extends State<MapScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               ),
               CurrentLocationLayer(
-                positionStream: const LocationMarkerDataStreamFactory().fromGeolocatorPositionStream(
+                positionStream: const LocationMarkerDataStreamFactory()
+                    .fromGeolocatorPositionStream(
                   stream: Geolocator.getPositionStream(),
                 ),
                 style: const LocationMarkerStyle(
@@ -318,17 +324,18 @@ class _MapScreenState extends State<MapScreen> {
                       hintText: 'Tìm kiếm địa chỉ...',
                       prefixIcon: Icon(Icons.search),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                        icon: Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            _searchResults = [];
-                          });
-                        },
-                      )
+                              icon: Icon(Icons.clear),
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  _searchResults = [];
+                                });
+                              },
+                            )
                           : null,
                     ),
                     onChanged: _searchAddress,
@@ -390,8 +397,9 @@ class _MapScreenState extends State<MapScreen> {
                     // Distance and time estimate display
                     if (_distance != null && _distance! > 0)
                       Container(
-                        height:50,
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        height: 50,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
@@ -408,7 +416,8 @@ class _MapScreenState extends State<MapScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.straighten, size: 20, color: Colors.red),
+                                Icon(Icons.straighten,
+                                    size: 20, color: Colors.red),
                                 SizedBox(width: 4),
                                 Text(
                                   MapService.formatDistance(_distance!),
@@ -421,7 +430,8 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                             Row(
                               children: [
-                                Icon(Icons.access_time, size: 20, color: Colors.red),
+                                Icon(Icons.access_time,
+                                    size: 20, color: Colors.red),
                                 SizedBox(width: 4),
                                 Text(
                                   MapService.getEstimatedTime(_distance!),
@@ -476,7 +486,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           if (_isLoading)
             const Center(
-              child: CircularProgressIndicator(),
+              child: CustomLoading(),
             ),
         ],
       ),

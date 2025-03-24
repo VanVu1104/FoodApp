@@ -5,6 +5,7 @@ import 'package:demo_firebase/screens/test_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/category_screen.dart';
+import '../screens/notification/notification_screen.dart';
 
 class BottomBarView extends StatefulWidget {
   final int initialIndex;
@@ -27,7 +28,8 @@ class _BottomBarViewState extends State<BottomBarView>
     HomeScreen(),
     FavouriteScreen(),
     CategoryScreen(),
-    TestScreen(),
+    // TestScreen(),
+    NotificationScreen(),
     ProfileScreen(),
   ];
 
