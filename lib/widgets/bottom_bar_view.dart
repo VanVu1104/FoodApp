@@ -1,7 +1,6 @@
 import 'package:demo_firebase/screens/favourite_screen.dart';
 import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/screens/profile.dart';
-import 'package:demo_firebase/screens/test_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/category_screen.dart';

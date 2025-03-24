@@ -52,7 +52,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Notifications")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Padding(
+          padding: EdgeInsets.only(top: 20.0),
+          child: Text(
+            "Thông báo",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        toolbarHeight: 100,
+      ),
       body: FutureBuilder<List<Notify>>(
         future: _notificationService.getNotifications(), // Fetch notifications
         builder: (context, snapshot) {
