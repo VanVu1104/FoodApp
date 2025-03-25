@@ -12,8 +12,11 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController birthdateController = TextEditingController();
-  String email = '';
+
+  String userName = '';
+  String userEmail = '';
   bool showSuccessMessage = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +34,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
         'birthdate': birthdateController.text,
       });
 
+      await user.updateDisplayName(usernameController.text);
+
       setState(() {
         showSuccessMessage = true;
       });
@@ -45,20 +50,25 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
 
   Future<void> loadUserInfo() async {
     User? user = FirebaseAuth.instance.currentUser;
-    print("User uid: $user?.uid");
     if (user != null) {
       String uid = user.uid;
+
+      // Set email from Firebase Authentication
+      setState(() {
+        userEmail = user.email ?? '';
+        userName = user.displayName ?? 'User';
+        emailController.text = userEmail;
+      });
+
       DocumentSnapshot userDoc =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (userDoc.exists) {
         Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
         setState(() {
-          usernameController.text = data['name'] ?? '';
+          usernameController.text = data['name'] ?? userName;
           phoneController.text = data['phone'] ?? '';
           birthdateController.text = data['birthdate'] ?? '';
-          email = data['email'] ?? '';
-          emailController.text = email; // Gán email vào TextEditingController
         });
       }
     }
@@ -89,7 +99,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                 backgroundImage: AssetImage('assets/avatar.png'),
               ),
               SizedBox(height: 10),
-              Text('Thy Do',
+              Text(userName,
                   style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
@@ -97,11 +107,11 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               SizedBox(height: 20),
               _buildTextField(usernameController, 'Tên đăng nhập'),
               _buildTextField(phoneController, 'Số điện thoại'),
-              _buildTextField(emailController, 'Email'),
+              _buildReadOnlyTextField(emailController, 'Email'),
               _buildDateField(birthdateController, 'Ngày sinh'),
               SizedBox(height: 20),
 
-              // Bọc nút Lưu thay đổi trong Stack
+              // Save Changes Button with Success Message
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -150,6 +160,38 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     );
   }
 
+  // Modified to make email read-only
+  Widget _buildReadOnlyTextField(
+      TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 35.0),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        style: TextStyle(fontSize: 20, color: Colors.grey),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey.shade200,
+          labelText: label,
+          labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Existing _buildTextField and _buildDateField methods remain the same
   Widget _buildTextField(TextEditingController controller, String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 35.0),
@@ -183,42 +225,61 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextField(
-        controller: controller,
-        style: TextStyle(fontSize: 20, color: Colors.black),
-        readOnly: true,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          labelText: label,
-          labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
-          floatingLabelStyle: TextStyle(fontSize: 23, color: Colors.black),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
+          controller: controller,
+          style: TextStyle(fontSize: 20, color: Colors.black),
+          readOnly: true,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            labelText: label,
+            labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
+            floatingLabelStyle: TextStyle(fontSize: 23, color: Colors.black),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red, width: 1),
+            ),
+            suffixIcon: Icon(Icons.calendar_today, color: Colors.black),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
-          ),
-          suffixIcon: Icon(Icons.calendar_today, color: Colors.black),
-        ),
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(1900),
-            lastDate: DateTime.now(),
-          );
-          setState(() {
-            controller.text = controller.text =
-                '${pickedDate?.day.toString().padLeft(2, '0')}/${pickedDate?.month.toString().padLeft(2, '0')}/${pickedDate?.year}';
-          });
-        },
-      ),
+          onTap: () async {
+            DateTime initialDate = DateTime.now();
+
+            if (controller.text.isNotEmpty) {
+              try {
+                List<String> dateParts = controller.text.split('/');
+                initialDate = DateTime(
+                  int.parse(dateParts[2]), // Year
+                  int.parse(dateParts[1]), // Month
+                  int.parse(dateParts[0]), // Day
+                );
+              } catch (e) {
+                // Nếu format lỗi, vẫn giữ initialDate là DateTime.now()
+              }
+            }
+
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: initialDate,
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+            );
+
+            if (pickedDate != null) {
+              setState(() {
+                controller.text =
+                    '${pickedDate.day.toString().padLeft(2, '0')}/'
+                    '${pickedDate.month.toString().padLeft(2, '0')}/'
+                    '${pickedDate.year}';
+              });
+            }
+          }),
     );
   }
 }

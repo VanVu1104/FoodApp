@@ -1,4 +1,3 @@
-import 'package:demo_firebase/services/auth_google.dart';
 import 'package:demo_firebase/services/forgot_password.dart';
 import 'package:demo_firebase/services/phone_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -387,8 +386,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       OutlinedButton(
                         onPressed: () async {
                           try {
-                            User? user =
-                                await FirebaseServices().signInWithGoogle();
+                            User? user = await AuthService().signInWithGoogle();
                             if (user != null) {
                               Navigator.pushReplacement(
                                 context,
@@ -427,42 +425,6 @@ class _AuthScreenState extends State<AuthScreen> {
                             const SizedBox(width: 10),
                             const Text(
                               "Đăng nhập với Google",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 16),
-
-                      // Phone sign in button
-                      OutlinedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => PhoneAuthentication()),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.shade300),
-                          minimumSize: Size(double.infinity, 45),
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.phone,
-                                size: 24, color: Color(0xFFDD2F36)),
-                            const SizedBox(width: 10),
-                            const Text(
-                              "Đăng nhập với số điện thoại",
                               style: TextStyle(
                                 color: Colors.black87,
                                 fontSize: 14,

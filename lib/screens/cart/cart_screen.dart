@@ -50,7 +50,7 @@ class _CartScreenState extends State<CartScreen> {
         // Show error message if there's an error
         if (cartProvider.error != null) {
           return Scaffold(
-            appBar: customAppBar(context, 'Giỏ hàng'),
+            appBar: customAppBar(context, 'Giỏ hàng', showCart: false),
             body: Center(
               child: Text('Lỗi: ${cartProvider.error}'),
             ),
@@ -64,7 +64,7 @@ class _CartScreenState extends State<CartScreen> {
         final cartItems = cartProvider.cartItems;
 
         return Scaffold(
-          appBar: customAppBar(context, 'Giỏ hàng'),
+          appBar: customAppBar(context, 'Giỏ hàng', showCart: false),
           backgroundColor: Colors.white,
           body: SafeArea(
             child: Column(

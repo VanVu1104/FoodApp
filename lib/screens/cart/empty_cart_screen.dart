@@ -14,7 +14,7 @@ class EmptyCartScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: customAppBar(context, 'Giỏ hàng'),
+      appBar: customAppBar(context, 'Giỏ hàng', showCart: false),
       body: Padding(
         padding: EdgeInsets.all(width * 0.05),
         child: Column(
@@ -45,7 +45,10 @@ class EmptyCartScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen(initialIndex: 2)));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MainScreen(initialIndex: 2)));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFD0000),

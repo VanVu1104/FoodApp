@@ -75,13 +75,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
     if (isLoading) {
       return Scaffold(
-        appBar: customAppBar(context, 'Chi tiết hóa đơn'),
+        appBar: customAppBar(context, 'Chi tiết hóa đơn',
+            showBack: false, showCart: false),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: customAppBar(context, 'Chi tiết hóa đơn'),
+      appBar: customAppBar(context, 'Chi tiết hóa đơn',
+          showBack: false, showCart: false),
       backgroundColor: Colors.white,
       body: Column(
         children: [

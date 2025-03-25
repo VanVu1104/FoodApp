@@ -16,7 +16,9 @@ class NewsScreen2 extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: customAppBar(context, 'SINH NHẬT THÊM BÁNH, BÉ YÊU THÊM VUI – GIÁ CHỈ TỪ 78K/BÉ'),
+      appBar: customAppBar(
+          context, 'SINH NHẬT THÊM BÁNH, BÉ YÊU THÊM VUI – GIÁ CHỈ TỪ 78K/BÉ',
+          showCart: false),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -184,8 +186,7 @@ class NewsScreen2 extends StatelessWidget {
                           height: 1.5,
                         ),
                         children: [
-                          TextSpan(
-                              text: '🦄 Unicorn Rainbow Fresh - '),
+                          TextSpan(text: '🦄 Unicorn Rainbow Fresh - '),
                           TextSpan(
                             text: '450K',
                             style: TextStyle(color: Color(0xFF96D17F)),
@@ -202,8 +203,7 @@ class NewsScreen2 extends StatelessWidget {
                           height: 1.5,
                         ),
                         children: [
-                          TextSpan(
-                              text: '🍊 Delighted Orange Fresh - '),
+                          TextSpan(text: '🍊 Delighted Orange Fresh - '),
                           TextSpan(
                             text: '430K',
                             style: TextStyle(color: Color(0xFF385CF9)),
@@ -220,13 +220,11 @@ class NewsScreen2 extends StatelessWidget {
                           height: 1.5,
                         ),
                         children: [
-                          TextSpan(
-                              text: '🍪 Cookie Cheese Mousse - '),
+                          TextSpan(text: '🍪 Cookie Cheese Mousse - '),
                           TextSpan(
                             text: '430K',
                             style: TextStyle(color: Color(0xFFECA21A)),
                           ),
-
                         ],
                       ),
                     ),
@@ -239,13 +237,11 @@ class NewsScreen2 extends StatelessWidget {
                           height: 1.5,
                         ),
                         children: [
-                          TextSpan(
-                              text: '🧸 Teddy Bear - Party Time Cake - '),
+                          TextSpan(text: '🧸 Teddy Bear - Party Time Cake - '),
                           TextSpan(
                             text: '430K',
                             style: TextStyle(color: Color(0xFFFC25BF)),
                           ),
-
                         ],
                       ),
                     ),

@@ -553,7 +553,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(30)),
                           color: Colors.white,
                         ),
                         padding: const EdgeInsets.all(16.0),
@@ -578,7 +579,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.timer, color: Colors.blue, size: 20),
+                                const Icon(Icons.timer,
+                                    color: Colors.blue, size: 20),
                                 const SizedBox(width: 4),
                                 Text(
                                   "${widget.product.productPreparationTime} phút",
@@ -605,11 +607,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   scrollDirection: Axis.horizontal,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: widget.product.sizes.map<Widget>((size) {
+                                    children: widget.product.sizes
+                                        .map<Widget>((size) {
                                       final bool isSelected =
                                           selectedSizeId == size.sizeId;
                                       return Padding(
-                                        padding: const EdgeInsets.only(right: 8.0),
+                                        padding:
+                                            const EdgeInsets.only(right: 8.0),
                                         child: InkWell(
                                           onTap: () {
                                             setState(() {
@@ -626,7 +630,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                     : Colors.grey[300]!,
                                                 width: isSelected ? 2 : 2.5,
                                               ),
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               color: Colors.white,
                                             ),
                                             child: Center(
@@ -647,7 +652,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     }).toList(),
                                   ),
                                 ),
-
                                 SizedBox(height: 20),
                               ],
                             ),
@@ -760,9 +764,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             height: 40,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: Colors.red,
-                                  width: 2),
+                              border: Border.all(color: Colors.red, width: 2),
                             ),
                             child: const Icon(Icons.remove, color: Colors.red),
                           ),
@@ -802,9 +804,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             height: 40,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: Colors.red,
-                                  width: 2),
+                              border: Border.all(color: Colors.red, width: 2),
                             ),
                             child: const Icon(Icons.add, color: Colors.red),
                           ),
@@ -815,7 +815,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       // Change function based on whether we're editing or adding
                       onPressed: _isProcessing
                           ? null
-                          : (widget.isEditingCart ? _updateCartItem : _addToCart),
+                          : (widget.isEditingCart
+                              ? _updateCartItem
+                              : _addToCart),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.color,
                         shape: RoundedRectangleBorder(
@@ -826,7 +828,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           vertical: 12,
                         ),
                       ),
-                      child: Text(_isAddingToCart ? "Đang thêm..." : "Thêm vào giỏ",
+                      child: Text(
+                          _isProcessing
+                              ? "Đang xử lý..."
+                              : (widget.isEditingCart
+                                  ? "Cập nhật món"
+                                  : "Thêm vào giỏ"),
                           style: const TextStyle(color: Colors.white)),
                     ),
                   ],

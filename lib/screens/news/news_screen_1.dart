@@ -16,7 +16,9 @@ class NewsScreen1 extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: customAppBar(context, 'SANG XỊN MỊN -WAGYU BURGER CHÍNH THỨC LÊN SÓNG!'),
+      appBar: customAppBar(
+          context, 'SANG XỊN MỊN -WAGYU BURGER CHÍNH THỨC LÊN SÓNG!',
+          showCart: false),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

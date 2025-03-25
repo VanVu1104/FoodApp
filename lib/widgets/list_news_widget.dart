@@ -9,17 +9,17 @@ class ListNewsWidget extends StatelessWidget {
 
   final List<News> newsItems = [
     News(
-      newsId: '1',
-      newsImageUrl: 'assets/news_banner_1.png',
-      newsTitle: 'SANG XỊN MỊN -WAGYU BURGER CHÍNH THỨC LÊN SÓNG!',
-      newsFunction: (context) => Navigator.push(context, MaterialPageRoute(builder: (context) => NewsScreen1()))
-    ),
+        newsId: '1',
+        newsImageUrl: 'assets/news_banner_1.jpg',
+        newsTitle: 'SANG XỊN MỊN -WAGYU BURGER CHÍNH THỨC LÊN SÓNG!',
+        newsFunction: (context) => Navigator.push(
+            context, MaterialPageRoute(builder: (context) => NewsScreen1()))),
     News(
         newsId: '2',
-        newsImageUrl: 'assets/news_banner_2.png',
+        newsImageUrl: 'assets/news_banner_2.jpg',
         newsTitle: 'SINH NHẬT THÊM BÁNH, BÉ YÊU THÊM VUI - GIÁ CHỈ TỪ...',
-        newsFunction: (context) => Navigator.push(context, MaterialPageRoute(builder: (context) => NewsScreen2()))
-    ),
+        newsFunction: (context) => Navigator.push(
+            context, MaterialPageRoute(builder: (context) => NewsScreen2()))),
   ];
 
   @override

@@ -1,3 +1,5 @@
+import 'package:demo_firebase/widgets/custom_app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -6,121 +8,221 @@ class ChangePasswordPage extends StatefulWidget {
 }
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
-  final TextEditingController currentPasswordController = TextEditingController();
-  final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final auth = FirebaseAuth.instance;
+  String _message = '';
+  bool _isLoading = false;
 
-  bool showSuccessMessage = false;
+  // Email validation
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập email';
+    }
+    String emailPattern = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+    if (!RegExp(emailPattern).hasMatch(value)) {
+      return 'Email không hợp lệ';
+    }
+    return null;
+  }
 
-  void _saveChanges() {
-    setState(() {
-      showSuccessMessage = true;
-    });
-
-    // Ẩn thông báo sau 2 giây
-    Future.delayed(Duration(seconds: 2), () {
+  Future<void> _resetPassword() async {
+    if (_formKey.currentState!.validate()) {
       setState(() {
-        showSuccessMessage = false;
+        _isLoading = true;
+        _message = '';
       });
-    });
+
+      try {
+        await auth.sendPasswordResetEmail(email: _emailController.text.trim());
+        setState(() {
+          _message =
+              'Chúng tôi đã gửi liên kết đặt lại mật khẩu đến email của bạn';
+        });
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          setState(() {
+            _message = 'Email không tồn tại trong hệ thống';
+          });
+        } else {
+          setState(() {
+            _message = e.message ?? 'Đã xảy ra lỗi';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _message = 'Đã xảy ra lỗi: $e';
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.white, // Đảm bảo toàn bộ nền trắng
-      appBar: AppBar(
-        title: Text(
-          'Thay đổi mật khẩu',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25, color: Colors.black),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            SizedBox(height: 50), // Tăng khoảng cách từ tiêu đề đến form nhập
-            _buildTextField(currentPasswordController, 'Mật khẩu hiện tại'),
-            _buildTextField(newPasswordController, 'Mật khẩu mới'),
-            _buildTextField(confirmPasswordController, 'Nhập lại mật khẩu'),
-            SizedBox(height: 10),
-
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 100),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text('Lưu thay đổi', style: TextStyle(color: Colors.white, fontSize: 23)),
-                ),
-                if (showSuccessMessage)
-                  Positioned(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Lưu thay đổi thành công',
-                            style: TextStyle(color: Colors.white, fontSize: 20),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(Icons.check_circle, color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        children: [
+          // Background with curved shape
+          Padding(
+            padding: EdgeInsets.only(top: size.height * 0.05),
+            child: SizedBox(
+              width: double.infinity,
+              height: double.maxFinite,
+              child: Image.asset(
+                'assets/bg_login.png', // Background image
+                fit: BoxFit.cover,
+              ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
+          ),
 
-  Widget _buildTextField(TextEditingController controller, String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 35.0),
-      child: TextField(
-        controller: controller,
-        obscureText: true, // Ẩn mật khẩu
-        style: TextStyle(fontSize: 20, color: Colors.black),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          labelText: label,
-          labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
-          floatingLabelStyle: TextStyle(fontSize: 23, color: Colors.black),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
+          // Content
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Logo positioned correctly at top left
+                      Padding(
+                        padding: const EdgeInsets.only(top: 0),
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: Image.asset(
+                            'assets/logo1.png',
+                            width: 100, // Adjust size to match design
+                            height: 100,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: size.height * 0.05),
+
+                      // Forgot Password title - centered and bold
+                      Center(
+                        child: Text(
+                          "ĐỔI MẬT KHẨU",
+                          style: TextStyle(
+                            color: const Color(0xFFDD2F36),
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: size.height * 0.01),
+
+                      // Instruction text
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Text(
+                          "Vui lòng nhập email của bạn để nhận liên kết đặt lại mật khẩu nhanh chóng.",
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Color(0xFFB9B9B9),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
+                      SizedBox(height: size.height * 0.04),
+
+                      // Email field - with red border only
+                      TextFormField(
+                        controller: _emailController,
+                        validator: _validateEmail,
+                        keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Email',
+                          hintStyle: TextStyle(
+                            fontSize: 19,
+                            color: Color(0xFFB9B9B9),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFDD2F36)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Color(0xFFDD2F36)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                BorderSide(color: Color(0xFFDD2F36), width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+
+                      SizedBox(height: size.height * 0.03),
+
+                      // Reset password button - full width red button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _resetPassword,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFD0000),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _isLoading
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text(
+                                  "Gửi",
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      SizedBox(height: 15),
+
+                      // Success/Error message display
+                      if (_message.isNotEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Text(
+                              _message,
+                              style: TextStyle(
+                                color: _message.contains('gửi')
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
-          ),
-        ),
+        ],
       ),
     );
   }
