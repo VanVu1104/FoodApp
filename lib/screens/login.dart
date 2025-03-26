@@ -1,3 +1,4 @@
+import 'package:demo_firebase/screens/register_phone.dart';
 import 'package:demo_firebase/services/forgot_password.dart';
 import 'package:demo_firebase/services/phone_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -182,7 +183,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
                       SizedBox(height: size.height * 0.04),
 
-                      // Email field - with red border only
                       TextFormField(
                         controller: _emailController,
                         validator: _validateEmail,
@@ -362,7 +362,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
                       SizedBox(height: 20),
 
-                      // "Or" divider
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.grey.shade400)),
@@ -379,10 +378,39 @@ class _AuthScreenState extends State<AuthScreen> {
                           Expanded(child: Divider(color: Colors.grey.shade400)),
                         ],
                       ),
-
+                      OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.shade300),
+                          minimumSize: Size(double.infinity, 45),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/phone.png',
+                              height: 24,
+                              width: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              "Đăng nhập với số điện thoại",
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       SizedBox(height: 20),
 
-                      // Google sign in button
                       OutlinedButton(
                         onPressed: () async {
                           try {
@@ -418,7 +446,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/gg.png', // Make sure to add Google logo to assets
+                              'assets/gg.png',
                               height: 24,
                               width: 24,
                             ),
@@ -433,9 +461,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ],
                         ),
                       ),
-
-                      SizedBox(height: 20),
-
                       // Error message display
                       if (_message.isNotEmpty)
                         Center(

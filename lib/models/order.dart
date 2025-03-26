@@ -25,7 +25,8 @@ class OrderProduct {
   final String? feedback;
   final DateTime createdAt;
   final DateTime updatedAt;
-
+  final String nameCustomer;
+  final String phoneCustomer;
   OrderProduct(
     this.orderId,
     this.userId,
@@ -49,6 +50,8 @@ class OrderProduct {
     this.feedback,
     this.createdAt,
     this.updatedAt,
+    this.nameCustomer,
+    this.phoneCustomer,
   );
 
   Map<String, dynamic> toJson() {
@@ -61,7 +64,9 @@ class OrderProduct {
       'deliveryAddressName': deliveryAddressName,
       'deliveryAddressLatitude': deliveryAddressLatitude,
       'deliveryAddressLongitude': deliveryAddressLongitude,
-      'listCartItem': listCartItem.map((item) => item.toJson()).toList(), // Convert List<CartItem> to JSON
+      'listCartItem': listCartItem
+          .map((item) => item.toJson())
+          .toList(), // Convert List<CartItem> to JSON
       'deliveryFee': deliveryFee,
       'orderDiscount': orderDiscount,
       'deliveryDiscount': deliveryDiscount,
@@ -73,8 +78,11 @@ class OrderProduct {
       'status': status,
       'ratedBar': ratedBar,
       'feedback': feedback,
-      'createdAt': Timestamp.fromDate(createdAt), // Convert DateTime to Firestore Timestamp
+      'createdAt': Timestamp.fromDate(
+          createdAt), // Convert DateTime to Firestore Timestamp
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'nameCustomer': nameCustomer,
+      'phoneCustomer': phoneCustomer
     };
   }
 }

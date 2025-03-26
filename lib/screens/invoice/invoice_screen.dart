@@ -1,4 +1,6 @@
+import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/screens/invoice/custom.dart';
+import 'package:demo_firebase/screens/main_screen.dart';
 import 'package:demo_firebase/services/product_service.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -210,9 +212,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       backgroundColor: Color(0xFFFFE0E0),
                       orderId: orderData?['orderId'] ?? widget.orderId,
                       recipientName:
-                          orderData?['customerName'] ?? 'Chưa có thông tin',
+                          orderData?['nameCustomer'] ?? 'Chưa có thông tin',
                       phoneNumber:
-                          orderData?['customerPhone'] ?? 'Chưa có thông tin',
+                          orderData?['phoneCustomer'] ?? 'Chưa có thông tin',
                       address: orderData?['deliveryAddressName'] ??
                           'Chưa có thông tin',
                       // deliveryFee:
@@ -274,7 +276,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 const Spacer(),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,

@@ -48,8 +48,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundImage: AssetImage('assets/avatar.png'),
                 ),
                 const SizedBox(height: 5),
-                const Text(
-                  'Thy Do',
+                Text(
+                  userName,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

@@ -1,3 +1,4 @@
+import 'package:demo_firebase/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +9,8 @@ class ProfileInfoPage extends StatefulWidget {
 }
 
 class _ProfileInfoPageState extends State<ProfileInfoPage> {
+  final AuthService _authService = AuthService();
+
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -24,51 +27,49 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   }
 
   void _saveChanges() async {
-    User? user = FirebaseAuth.instance.currentUser;
+    User? user = _authService.getCurrentUser();
     if (user != null) {
-      String uid = user.uid;
+      bool updateSuccessful = await _authService.updateUserProfile(
+        uid: user.uid,
+        name: usernameController.text,
+        phone: phoneController.text,
+        birthdate: birthdateController.text,
+      );
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'name': usernameController.text,
-        'phone': phoneController.text,
-        'birthdate': birthdateController.text,
-      });
-
-      await user.updateDisplayName(usernameController.text);
-
-      setState(() {
-        showSuccessMessage = true;
-      });
-
-      Future.delayed(Duration(seconds: 2), () {
+      if (updateSuccessful) {
         setState(() {
-          showSuccessMessage = false;
+          showSuccessMessage = true;
+          userName = usernameController.text;
         });
-      });
+
+        Future.delayed(Duration(seconds: 2), () {
+          setState(() {
+            showSuccessMessage = false;
+          });
+        });
+      }
     }
   }
 
   Future<void> loadUserInfo() async {
-    User? user = FirebaseAuth.instance.currentUser;
+    User? user = _authService.getCurrentUser();
     if (user != null) {
-      String uid = user.uid;
-
       // Set email from Firebase Authentication
       setState(() {
-        userEmail = user.email ?? '';
-        userName = user.displayName ?? 'User';
+        userEmail = _authService.getUserEmail() ?? '';
+        userName = _authService.getUserDisplayName();
         emailController.text = userEmail;
       });
 
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      // Fetch additional user info from Firestore
+      Map<String, dynamic>? userData =
+          await _authService.fetchUserInfo(user.uid);
 
-      if (userDoc.exists) {
-        Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+      if (userData != null) {
         setState(() {
-          usernameController.text = data['name'] ?? userName;
-          phoneController.text = data['phone'] ?? '';
-          birthdateController.text = data['birthdate'] ?? '';
+          usernameController.text = userData['name'] ?? userName;
+          phoneController.text = userData['phone'] ?? '';
+          birthdateController.text = userData['birthdate'] ?? '';
         });
       }
     }
@@ -160,7 +161,6 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     );
   }
 
-  // Modified to make email read-only
   Widget _buildReadOnlyTextField(
       TextEditingController controller, String label) {
     return Padding(

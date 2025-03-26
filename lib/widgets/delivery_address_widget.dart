@@ -98,82 +98,101 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
   }
 
   Future<void> initial() async {
-    if (!mounted) return; // Check if widget is still mounted
+    if (!mounted) return;
 
-    // First, get all address from firebase
-    pickupAddresses = await MapService.getAddressesFromFirebase();
+    // Track loading state
+    setState(() {
+      isLoading = true;
+    });
 
-    // Second, check has data in shared preferences
-    bool hasData = await SharePrefService.hasStoredLocationData();
+    try {
+      // First, get all addresses from firebase
+      pickupAddresses = await MapService.getAddressesFromFirebase();
 
-    // if doesn't have data in share prefs we will get current position
-    if (!hasData) {
-      // Get current position
-      Position? position = await MapService.getCurrentPosition();
-      if (position != null && mounted) {
-        // Check if still mounted
-        // Convert position to LatLng
-        LatLng latLng = MapService.positionToLatLng(position);
+      // Check if this is the first app launch
+      bool isFirstLaunch = await SharePrefService.isFirstAppLaunch();
 
-        // Get address from coordinates
-        String? address = await MapService.getAddressFromLatLng(latLng);
-        double? distance = MapService.calculateDistance(
-            LatLng(selectedPickupAddress.latitude,
-                selectedPickupAddress.longitude),
-            latLng);
+      if (isFirstLaunch) {
+        // Try to get current position on first launch
+        Position? position = await MapService.getCurrentPosition();
+        if (position != null && mounted) {
+          // Convert position to LatLng
+          LatLng latLng = MapService.positionToLatLng(position);
 
-        if (address != null && mounted) {
-          // Check if still mounted
-          _updateDeliveryAddress(address, latLng, distance);
-          _updateSelectedPickupAddress(selectedPickupAddress);
+          // Get address from coordinates
+          String? address = await MapService.getAddressFromLatLng(latLng);
+          double? distance = MapService.calculateDistance(
+              LatLng(selectedPickupAddress.latitude,
+                  selectedPickupAddress.longitude),
+              latLng);
 
-          print("Set and saved address: $address");
-          print(
-              "Set and saved location: Lat ${latLng.latitude}, Lng ${latLng.longitude}");
+          if (address != null && mounted) {
+            // Update delivery address and pickup address
+            _updateDeliveryAddress(address, latLng, distance);
+            _updateSelectedPickupAddress(selectedPickupAddress);
+
+            // Mark first launch as complete
+            await SharePrefService.setFirstAppLaunchComplete();
+
+            print("First launch - Set and saved address: $address");
+          }
         }
+      } else {
+        // Not first launch - load saved data
+        await _loadSavedData();
       }
+    } catch (e) {
+      print("Error during initial data load: $e");
+      // Fallback to loading saved data if any error occurs
+      await _loadSavedData();
+    } finally {
+      // Ensure loading state is set to false
+      setState(() {
+        isLoading = false;
+      });
     }
-    // if data is exist we will get data into selected address,
-    // selected location and selected pickup address
-    else {
-      await SharePrefService.printAllSavedData();
+  }
 
+// Extract repeated loading logic to a separate method
+  Future<void> _loadSavedData() async {
+    try {
       selectedAddress = await SharePrefService.getSelectedAddress();
       selectedLocation = await SharePrefService.getSelectedLocation();
+      selectedDistance = await SharePrefService.getSelectedDistance() ?? 0;
       final savedPickupAddress =
           await SharePrefService.getSelectedPickupAddress();
 
-      if (selectedLocation != null) {
-        final savedDistance = MapService.calculateDistance(
-            LatLng(selectedPickupAddress.latitude,
-                selectedPickupAddress.longitude),
-            selectedLocation!);
+      if (selectedLocation != null && savedPickupAddress != null) {
+        // Find matching address in the list or add it
+        final existingIndex = pickupAddresses.indexWhere(
+            (address) => address.addressId == savedPickupAddress.addressId);
 
-        if (savedPickupAddress != null && mounted) {
-          // Check if still mounted
-          // Find matching address in the list or add it
-          final existingIndex = pickupAddresses.indexWhere(
-              (address) => address.addressId == savedPickupAddress.addressId);
+        setState(() {
+          if (existingIndex >= 0) {
+            selectedPickupAddress = pickupAddresses[existingIndex];
+          } else {
+            // If the saved pickup address isn't in our list, add it
+            pickupAddresses.add(savedPickupAddress);
+            selectedPickupAddress = savedPickupAddress;
+          }
 
-          setState(() {
-            if (existingIndex >= 0) {
-              selectedPickupAddress = pickupAddresses[existingIndex];
-              selectedDistance = savedDistance;
-            } else {
-              // If the saved pickup address isn't in our list, add it
-              pickupAddresses.add(savedPickupAddress);
-              selectedPickupAddress = savedPickupAddress;
-            }
-          });
-          print("Set pickup address: ${selectedPickupAddress.addressName}");
-        }
+          // Recalculate distance with saved location
+          selectedDistance = MapService.calculateDistance(
+              LatLng(selectedPickupAddress.latitude,
+                  selectedPickupAddress.longitude),
+              selectedLocation!);
+        });
+
+        print(
+            "Loaded from saved data - Pickup address: ${selectedPickupAddress.addressName}");
+        print("Loaded address: $selectedAddress");
+        print(
+            "Loaded location: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}");
+        print(
+            "Loaded distance: ${MapService.formatDistance(selectedDistance)}");
       }
-
-      print("Loaded address: $selectedAddress");
-      print(
-          "Loaded location: ${selectedLocation?.latitude}, ${selectedLocation?.longitude}");
-      print("Loaded distance: ${MapService.formatDistance(selectedDistance)}");
-      print("Loaded pickup address: ${selectedPickupAddress.addressName}");
+    } catch (e) {
+      print("Error loading saved data: $e");
     }
   }
 
@@ -191,10 +210,10 @@ class _DeliveryAddressWidgetState extends State<DeliveryAddressWidget> {
 
     if (widget.onAddressesUpdated != null) {
       widget.onAddressesUpdated!(
-          address.addressId,
-          selectedAddress,
-          selectedLocation?.latitude,
-          selectedLocation?.longitude,
+        address.addressId,
+        selectedAddress,
+        selectedLocation?.latitude,
+        selectedLocation?.longitude,
       );
     }
 

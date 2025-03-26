@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   _enjoyNowContent(),
 
-                  _mustTryContent(),
+                  // _mustTryContent(),
 
                   _newsContent(),
                 ],
@@ -90,12 +90,12 @@ class _HomeScreenState extends State<HomeScreen> {
           // Search and Cart Icons
           Row(
             children: [
-              IconButton(
-                icon: Icon(Icons.search, size: 32, color: Colors.red),
-                onPressed: () {
-                  // Xử lý khi bấm tìm kiếm
-                },
-              ),
+              // IconButton(
+              //   icon: Icon(Icons.search, size: 32, color: Colors.red),
+              //   onPressed: () {
+              //     // Xử lý khi bấm tìm kiếm
+              //   },
+              // ),
               CartBadge(),
             ],
           ),
@@ -285,7 +285,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-
                             Positioned(
                               top: 20,
                               left: 20,
@@ -303,7 +302,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                             ),
-
                             Positioned(
                               bottom: -25,
                               left: 0,
@@ -344,7 +342,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-
                             Positioned(
                               top: 20,
                               left: 20,
@@ -362,7 +359,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                             ),
-
                             Positioned(
                               bottom: -25,
                               left: 0,
@@ -392,26 +388,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _mustTryContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
-          child: Text(
-            textAlign: TextAlign.left,
-            'MÓN NGON PHẢI THỬ',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        ListComboWidget(),
-      ],
-    );
-  }
+  // Widget _mustTryContent() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Padding(
+  //         padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+  //         child: Text(
+  //           textAlign: TextAlign.left,
+  //           'MÓN NGON PHẢI THỬ',
+  //           style: TextStyle(
+  //             color: Colors.black,
+  //             fontSize: 18,
+  //             fontWeight: FontWeight.bold,
+  //           ),
+  //         ),
+  //       ),
+  //       ListComboWidget(),
+  //     ],
+  //   );
+  // }
 
   Widget _newsContent() {
     return Column(

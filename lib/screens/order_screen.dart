@@ -1,9 +1,11 @@
 import 'package:demo_firebase/screens/discount_screen.dart';
 import 'package:demo_firebase/screens/order/home_delivery_screen.dart';
+import 'package:demo_firebase/services/auth_service.dart';
 import 'package:demo_firebase/utils/utils.dart';
 import 'package:demo_firebase/models/cart_item.dart';
 import 'package:demo_firebase/services/cart_service.dart';
 import 'package:demo_firebase/widgets/order_product_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -61,6 +63,19 @@ class _OrderScreenState extends State<OrderScreen> {
 
   // Add subscription to listen for distance changes
   StreamSubscription? _prefSubscription;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  // Method to load user info
+  Future<Map<String, dynamic>?> _loadUserInfo() async {
+    final AuthService authService = AuthService();
+    User? currentUser = authService.getCurrentUser();
+
+    if (currentUser != null) {
+      return await authService.fetchUserInfo(currentUser.uid);
+    }
+
+    return null;
+  }
 
   void updateDistance(double dis) {
     setState(() {
@@ -243,6 +258,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       onDeliveryStatusChanged: _updateDeliveryStatus,
                       onAddressesUpdated: _updateAddresses,
                     ),
+                    _buildInfo(),
                     _buildOrderItemsSection(widget.cartItems),
                     _buildOrderNoteSection(),
                     _buildPaymentInfoSection(),
@@ -329,6 +345,77 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildInfo() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Thông tin nhận hàng',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16),
+          FutureBuilder<Map<String, dynamic>?>(
+            future: _loadUserInfo(),
+            builder: (context, snapshot) {
+              // Set default values
+              String defaultName = 'Họ và tên';
+              String defaultPhone = 'Số điện thoại';
+
+              // Update controllers if data is available
+              if (snapshot.hasData && snapshot.data != null) {
+                defaultName = snapshot.data?['name'] ?? defaultName;
+                defaultPhone = snapshot.data?['phone'] ?? defaultPhone;
+
+                // Set the controllers with the retrieved or default values
+                _nameController.text = defaultName;
+                _phoneController.text = defaultPhone;
+              }
+
+              return Column(
+                children: [
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      hintText: defaultName,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    onChanged: (_) => {},
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      hintText: defaultPhone,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    onChanged: (_) => {},
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -553,7 +640,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           name: "Thanh toán tiền mặt",
           isSelected: _selectedPaymentMethod == "cash",
-          paymentMethodId: "COD",
+          paymentMethodId: "cash",
         ),
 
         // Payment method 2 - ZaloPay
@@ -565,7 +652,7 @@ class _OrderScreenState extends State<OrderScreen> {
             fit: BoxFit.fitWidth,
           ),
           name: "Zalopay",
-          isSelected: _selectedPaymentMethod == "zalopay",
+          isSelected: _selectedPaymentMethod == "Zalo Pay",
           paymentMethodId: "Zalo Pay",
         ),
       ],
@@ -658,7 +745,25 @@ class _OrderScreenState extends State<OrderScreen> {
                 //   context: context,
                 //   pickUpAddress: "828 Sư Vạn Hạnh",
                 // );
+                if (_nameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Vui lòng nhập họ và tên"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
 
+                if (_phoneController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Vui lòng nhập số điện thoại"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
                 String orderId =
                     await _orderService.processPaymentAndCreateOrder(
                         _selectedPaymentMethod,
@@ -678,7 +783,9 @@ class _OrderScreenState extends State<OrderScreen> {
                         getTotalPrice(),
                         _noteController.text,
                         0,
-                        null);
+                        null,
+                        _nameController.text.trim(),
+                        _phoneController.text.trim());
 
                 // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(

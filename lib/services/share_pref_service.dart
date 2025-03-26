@@ -162,8 +162,10 @@ class SharePrefService {
   static const String _selectedPickupAddressKey = 'selected_pickup_address';
 
   // Stream controller to notify about changes
-  static final StreamController<Map<String, dynamic>> _preferencesStreamController = StreamController.broadcast();
-
+  static final StreamController<Map<String, dynamic>>
+      _preferencesStreamController = StreamController.broadcast();
+  // New key for first launch tracking
+  static const String _firstLaunchKey = 'is_first_launch';
   // Save selected address string
   static Future<bool> saveSelectedAddress(String? address) async {
     if (address == null) return false;
@@ -175,6 +177,26 @@ class SharePrefService {
       _preferencesStreamController.add({'address': address});
     }
     return success;
+  }
+
+// Check if it's the first app launch
+  static Future<bool> isFirstAppLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_firstLaunchKey) ?? true;
+  }
+
+  // Mark first launch as complete
+  static Future<void> setFirstAppLaunchComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_firstLaunchKey, false);
+    _preferencesStreamController.add({'first_launch': false});
+  }
+
+  //Method to reset first launch flag (useful for testing or app reset)
+  static Future<void> resetFirstLaunchFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_firstLaunchKey);
+    _preferencesStreamController.add({'first_launch': true});
   }
 
   // Get selected address string
@@ -192,7 +214,8 @@ class SharePrefService {
       'latitude': location.latitude,
       'longitude': location.longitude
     };
-    bool success = await prefs.setString(_selectedLocationKey, jsonEncode(locationMap));
+    bool success =
+        await prefs.setString(_selectedLocationKey, jsonEncode(locationMap));
 
     if (success) {
       _preferencesStreamController.add({'location': location});
@@ -209,10 +232,8 @@ class SharePrefService {
 
     try {
       final locationMap = jsonDecode(locationString) as Map<String, dynamic>;
-      return LatLng(
-          locationMap['latitude'] as double,
-          locationMap['longitude'] as double
-      );
+      return LatLng(locationMap['latitude'] as double,
+          locationMap['longitude'] as double);
     } catch (e) {
       print('Error parsing location data: $e');
       return null;
@@ -241,7 +262,8 @@ class SharePrefService {
   // Save selected pickup address (Address object)
   static Future<bool> saveSelectedPickupAddress(Address address) async {
     final prefs = await SharedPreferences.getInstance();
-    bool success = await prefs.setString(_selectedPickupAddressKey, jsonEncode(address.toJson()));
+    bool success = await prefs.setString(
+        _selectedPickupAddressKey, jsonEncode(address.toJson()));
 
     if (success) {
       _preferencesStreamController.add({'pickup_address': address});
@@ -290,7 +312,8 @@ class SharePrefService {
     print('=== SAVED LOCATION DATA ===');
     print('Selected Address: $savedAddress');
     print('Selected Location: $savedLocationString');
-    print('Selected Distance: ${MapService.formatDistance(savedDistanceDouble ?? 0)}');
+    print(
+        'Selected Distance: ${MapService.formatDistance(savedDistanceDouble ?? 0)}');
     print('Selected Pickup Address: $savedPickupAddressString');
     print('===========================');
 
@@ -298,7 +321,8 @@ class SharePrefService {
     try {
       if (savedLocationString != null) {
         final locationMap = jsonDecode(savedLocationString);
-        print('Parsed Location: Lat: ${locationMap['latitude']}, Lng: ${locationMap['longitude']}');
+        print(
+            'Parsed Location: Lat: ${locationMap['latitude']}, Lng: ${locationMap['longitude']}');
       }
 
       if (savedPickupAddressString != null) {

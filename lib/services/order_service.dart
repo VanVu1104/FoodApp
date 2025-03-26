@@ -101,9 +101,11 @@ class OrderService {
       double totalPrice,
       String? note,
       int ratedBar,
-      String? feedback) async {
+      String? feedback,
+      String nameCustomer,
+      String phoneCustomer) async {
     bool isPaymentSuccess = false;
-    if (paymentMethod == "zalopay") {
+    if (paymentMethod == "Zalo Pay") {
       isPaymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
     } else if (paymentMethod == "cash") {
       // Cash payment is automatically successful
@@ -141,7 +143,9 @@ class OrderService {
           ratedBar,
           feedback,
           createdAt,
-          updatedAt);
+          updatedAt,
+          nameCustomer,
+          phoneCustomer);
 
       await docRef.set(orderProduct.toJson());
 
