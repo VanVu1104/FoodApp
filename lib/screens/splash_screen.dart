@@ -14,7 +14,8 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     // Chuyển sang màn hình đăng nhập sau 3 giây
     Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AuthScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => AuthScreen()));
     });
   }
 

@@ -1,4 +1,5 @@
 import 'package:demo_firebase/screens/cart/cart_screen.dart';
+import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/screens/news/news_screen_1.dart';
 import 'package:demo_firebase/screens/profile.dart';
 import 'package:demo_firebase/screens/splash_screen.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         routes: {
           // '/': (context) => MainScreen(),
           '/': (context) => ScreenLoading1(),
+          '/home': (context) => HomeScreen(),
           // '/': (context) => CartScreen(),
           // '/': (context) => NewsScreen2(),
           '/login': (context) => AuthScreen(), // Màn hình đăng nhập

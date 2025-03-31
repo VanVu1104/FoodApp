@@ -1,4 +1,6 @@
+import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/screens/invoice/custom.dart';
+import 'package:demo_firebase/screens/main_screen.dart';
 import 'package:demo_firebase/services/product_service.dart';
 import 'package:demo_firebase/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +51,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
             'productId': productId,
             'productName': product.productName ?? 'Sản phẩm',
             'description': product.productDescription ?? 'Không có mô tả',
-            'price': product.productPrice ?? 0,
+            'price': item['totalPrice'] ?? 0,
             'imagePath': product.productImg,
             'quantity': item['quantity'] ?? 1,
           });
@@ -75,13 +77,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
     if (isLoading) {
       return Scaffold(
-        appBar: customAppBar(context, 'Chi tiết hóa đơn'),
+        appBar: customAppBar(context, 'Chi tiết hóa đơn',
+            showBack: false, showCart: false),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: customAppBar(context, 'Chi tiết hóa đơn'),
+      appBar: customAppBar(context, 'Chi tiết hóa đơn',
+          showBack: false, showCart: false),
       backgroundColor: Colors.white,
       body: Column(
         children: [
@@ -208,9 +212,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       backgroundColor: Color(0xFFFFE0E0),
                       orderId: orderData?['orderId'] ?? widget.orderId,
                       recipientName:
-                          orderData?['customerName'] ?? 'Chưa có thông tin',
+                          orderData?['nameCustomer'] ?? 'Chưa có thông tin',
                       phoneNumber:
-                          orderData?['customerPhone'] ?? 'Chưa có thông tin',
+                          orderData?['phoneCustomer'] ?? 'Chưa có thông tin',
                       address: orderData?['deliveryAddressName'] ??
                           'Chưa có thông tin',
                       // deliveryFee:
@@ -272,7 +276,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 const Spacer(),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => MainScreen()),
+                      (route) => false,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,

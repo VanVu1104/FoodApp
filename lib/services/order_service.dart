@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demo_firebase/models/product.dart';
+import 'package:demo_firebase/services/product_service.dart';
 import 'package:demo_firebase/services/zalopayment.dart';
 import 'package:demo_firebase/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -99,9 +101,11 @@ class OrderService {
       double totalPrice,
       String? note,
       int ratedBar,
-      String? feedback) async {
+      String? feedback,
+      String nameCustomer,
+      String phoneCustomer) async {
     bool isPaymentSuccess = false;
-    if (paymentMethod == "zalopay") {
+    if (paymentMethod == "Zalo Pay") {
       isPaymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
     } else if (paymentMethod == "cash") {
       // Cash payment is automatically successful
@@ -135,11 +139,13 @@ class OrderService {
           paymentMethod,
           totalPrice,
           note,
-          'status',
+          'pending',
           ratedBar,
           feedback,
           createdAt,
-          updatedAt);
+          updatedAt,
+          nameCustomer,
+          phoneCustomer);
 
       await docRef.set(orderProduct.toJson());
 
@@ -159,14 +165,14 @@ class OrderService {
         return 'Giao thành công';
       case 'cancelled':
         return 'Đơn hàng hủy';
-      case 'rated':
-        return 'Đã đánh giá';
       case 'preparing':
         return 'Đang chuẩn bị';
       case 'delivering':
         return 'Đang giao';
-      default:
+      case 'pending':
         return 'Chờ xác nhận';
+      default:
+        return 'Lỗi';
     }
   }
 
@@ -269,7 +275,8 @@ class OrderService {
       'quantity': '$totalQuantity phần',
       'price': Utils().formatCurrency(totalPrice),
       'status': _getStatusText(order['status'] ?? ''),
-      'orderId': order['orderId']
+      'orderId': order['orderId'],
+      'ratedBar': order['ratedBar'] ?? 0
     };
   }
 
@@ -286,5 +293,83 @@ class OrderService {
       print('Error adding rating and feedback: $e');
       throw Exception('Failed to add rating and feedback: $e');
     }
+  }
+
+  // New method to fetch complete order details with additional processing
+  Future<Map<String, dynamic>> getFullOrderDetails(String orderId) async {
+    try {
+      // Get basic order details
+      final orderDetails = await getOrderById(orderId);
+
+      // Fetch pickup address if pickUpAddressId exists
+      if (orderDetails['pickUpAddressId'] != null &&
+          orderDetails['pickUpAddressId'].isNotEmpty) {
+        try {
+          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+              .collection('addresses')
+              .where('addressId', isEqualTo: orderDetails['pickUpAddressId'])
+              .limit(1)
+              .get();
+
+          if (querySnapshot.docs.isNotEmpty) {
+            orderDetails['pickUpAddress'] =
+                querySnapshot.docs.first['addressName'] ??
+                    'Địa chỉ không xác định';
+          } else {
+            orderDetails['pickUpAddress'] = 'Địa chỉ không tìm thấy';
+          }
+        } catch (e) {
+          orderDetails['pickUpAddress'] = 'Địa chỉ không xác định';
+          print('Lỗi lấy địa chỉ: $e');
+        }
+      } else {
+        orderDetails['pickUpAddress'] = '';
+      }
+
+      return orderDetails;
+    } catch (e) {
+      print('Error fetching full order details: $e');
+      rethrow;
+    }
+  }
+
+  // New method to process order items with product details
+  Future<List<Map<String, dynamic>>> processOrderItems(
+      List<dynamic> cartItems) async {
+    final ProductService _productService = ProductService();
+    List<Map<String, dynamic>> simplifiedOrderItems = [];
+
+    for (var item in cartItems) {
+      String productId = item['productId'].toString();
+
+      // Get product details from service
+      final product = await _productService.getProductByProductId(productId);
+
+      if (product != null) {
+        // Get the size information if available
+        String sizeId = item['sizeId'] ?? '';
+        String sizeName = 'Standard';
+
+        // Find the matching size if it exists
+        if (product.sizes != null && product.sizes.isNotEmpty) {
+          final size = product.sizes.firstWhere(
+            (s) => s.sizeId == sizeId,
+            orElse: () =>
+                ProductSize(sizeId: '', sizeName: 'Standard', extraPrice: 0),
+          );
+          sizeName = size.sizeName;
+        }
+
+        simplifiedOrderItems.add({
+          'productName': product.productName ?? 'Sản phẩm',
+          'productImg': product.productImg,
+          'sizeName': sizeName,
+          'price': item['unitPrice'] ?? product.productPrice ?? 0,
+          'quantity': item['quantity'] ?? 1,
+        });
+      }
+    }
+
+    return simplifiedOrderItems;
   }
 }

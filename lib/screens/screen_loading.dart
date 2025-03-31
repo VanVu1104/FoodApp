@@ -1,5 +1,6 @@
 import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/screens/main_screen.dart';
+import 'package:demo_firebase/screens/register_phone.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -66,7 +67,11 @@ class _ScreenLoading1State extends State<ScreenLoading1> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.pushNamed(context, '/login');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => RegisterPhoneScreen()),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,

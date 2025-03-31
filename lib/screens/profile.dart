@@ -1,11 +1,37 @@
+import 'package:demo_firebase/screens/login.dart';
 import 'package:demo_firebase/screens/order/order_history.dart';
+import 'package:demo_firebase/screens/policy/policy_screen.dart';
+import 'package:demo_firebase/screens/register_phone.dart';
+import 'package:demo_firebase/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import './profile_info.dart';
 import './change_password.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String userName = 'User';
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  void _loadUserName() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        userName = user.displayName ?? user.email?.split('@').first ?? 'User';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,48 +41,28 @@ class ProfileScreen extends StatelessWidget {
         slivers: [
           SliverAppBar(
             backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            title: const Text(
-              'Tài khoản',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-              ),
+            title: Column(
+              children: [
+                const SizedBox(height: 20),
+                const CircleAvatar(
+                  radius: 55,
+                  backgroundImage: AssetImage('assets/avatar.png'),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  userName,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 245, 0, 0),
+                  ),
+                ),
+              ],
             ),
             centerTitle: true,
-            expandedHeight: 250, // Chiều cao phần mở rộng
+            toolbarHeight: 180,
+            pinned: true,
             floating: false,
-            pinned: false, // Cho phép phần này biến mất khi cuộn lên
-            flexibleSpace: FlexibleSpaceBar(
-              background: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 65),
-                  const CircleAvatar(
-                    radius: 60,
-                    backgroundImage: AssetImage('assets/avatar.png'),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Thy Do',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 245, 0, 0),
-                    ),
-                  ),
-                  const Text('Điểm tích lũy | 500 điểm',
-                      style: TextStyle(fontSize: 18)),
-                ],
-              ),
-            ),
           ),
           SliverList(
             delegate: SliverChildListDelegate(
@@ -129,6 +135,19 @@ class ProfileScreen extends StatelessWidget {
             MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
           );
         }
+        if (title == 'Đăng xuất') {
+          AuthService().signOut();
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => RegisterPhoneScreen()),
+            (route) => false,
+          );
+        }
+        if (title == 'Chính sách') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PolicyScreen()),
+          );
+        }
       },
     );
   }
@@ -149,7 +168,6 @@ class ProfileScreen extends StatelessWidget {
             indent: 20,
             endIndent: 20),
         const SizedBox(height: 5),
-        const Text('Miễn phí giao hàng', style: TextStyle(fontSize: 18)),
         const SizedBox(height: 5),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

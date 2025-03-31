@@ -1,3 +1,5 @@
+import 'package:demo_firebase/services/auth_service.dart';
+import 'package:demo_firebase/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,12 +10,17 @@ class ProfileInfoPage extends StatefulWidget {
 }
 
 class _ProfileInfoPageState extends State<ProfileInfoPage> {
+  final AuthService _authService = AuthService();
+
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController birthdateController = TextEditingController();
-  String email = '';
+
+  String userName = '';
+  String userEmail = '';
   bool showSuccessMessage = false;
+
   @override
   void initState() {
     super.initState();
@@ -21,44 +28,50 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   }
 
   void _saveChanges() async {
-    User? user = FirebaseAuth.instance.currentUser;
+    User? user = _authService.getCurrentUser();
     if (user != null) {
-      String uid = user.uid;
+      bool updateSuccessful = await _authService.updateUserProfile(
+        uid: user.uid,
+        name: usernameController.text,
+        phone: phoneController.text,
+        birthdate: birthdateController.text,
+      );
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'name': usernameController.text,
-        'phone': phoneController.text,
-        'birthdate': birthdateController.text,
-      });
-
-      setState(() {
-        showSuccessMessage = true;
-      });
-
-      Future.delayed(Duration(seconds: 2), () {
+      if (updateSuccessful) {
         setState(() {
-          showSuccessMessage = false;
+          showSuccessMessage = true;
+          userName = usernameController.text;
         });
-      });
+
+        Future.delayed(Duration(seconds: 2), () {
+          setState(() {
+            showSuccessMessage = false;
+          });
+        });
+      }
     }
   }
 
   Future<void> loadUserInfo() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    print("User uid: $user?.uid");
+    User? user = _authService.getCurrentUser();
     if (user != null) {
-      String uid = user.uid;
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      // Set email from Firebase Authentication
+      setState(() {
+        userEmail = _authService.getUserEmail() ?? '';
+        userName = _authService.getUserDisplayName();
+        emailController.text = userEmail;
+      });
 
-      if (userDoc.exists) {
-        Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
+      // Fetch additional user info from Firestore
+      Map<String, dynamic>? userData =
+          await _authService.fetchUserInfo(user.uid);
+
+      if (userData != null) {
         setState(() {
-          usernameController.text = data['name'] ?? '';
-          phoneController.text = data['phone'] ?? '';
-          birthdateController.text = data['birthdate'] ?? '';
-          email = data['email'] ?? '';
-          emailController.text = email; // Gán email vào TextEditingController
+          usernameController.text = userData['name'] ?? userName;
+          phoneController.text =
+              Utils().formatPhoneNumber(userData['phone'] ?? '');
+          birthdateController.text = userData['birthdate'] ?? '';
         });
       }
     }
@@ -89,19 +102,19 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                 backgroundImage: AssetImage('assets/avatar.png'),
               ),
               SizedBox(height: 10),
-              Text('Thy Do',
+              Text(userName,
                   style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFFFD0000))),
               SizedBox(height: 20),
               _buildTextField(usernameController, 'Tên đăng nhập'),
-              _buildTextField(phoneController, 'Số điện thoại'),
+              _buildReadOnlyTextField(phoneController, 'Số điện thoại'),
               _buildTextField(emailController, 'Email'),
               _buildDateField(birthdateController, 'Ngày sinh'),
               SizedBox(height: 20),
 
-              // Bọc nút Lưu thay đổi trong Stack
+              // Save Changes Button with Success Message
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -150,6 +163,37 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     );
   }
 
+  Widget _buildReadOnlyTextField(
+      TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 35.0),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        style: TextStyle(fontSize: 20, color: Colors.grey),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey.shade200,
+          labelText: label,
+          labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey, width: 1),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Existing _buildTextField and _buildDateField methods remain the same
   Widget _buildTextField(TextEditingController controller, String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 35.0),
@@ -183,42 +227,61 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextField(
-        controller: controller,
-        style: TextStyle(fontSize: 20, color: Colors.black),
-        readOnly: true,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          labelText: label,
-          labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
-          floatingLabelStyle: TextStyle(fontSize: 23, color: Colors.black),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
+          controller: controller,
+          style: TextStyle(fontSize: 20, color: Colors.black),
+          readOnly: true,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            labelText: label,
+            labelStyle: TextStyle(fontSize: 23, color: Colors.grey.shade400),
+            floatingLabelStyle: TextStyle(fontSize: 23, color: Colors.black),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red, width: 1),
+            ),
+            suffixIcon: Icon(Icons.calendar_today, color: Colors.black),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.red, width: 1),
-          ),
-          suffixIcon: Icon(Icons.calendar_today, color: Colors.black),
-        ),
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(1900),
-            lastDate: DateTime.now(),
-          );
-          setState(() {
-            controller.text = controller.text =
-                '${pickedDate?.day.toString().padLeft(2, '0')}/${pickedDate?.month.toString().padLeft(2, '0')}/${pickedDate?.year}';
-          });
-        },
-      ),
+          onTap: () async {
+            DateTime initialDate = DateTime.now();
+
+            if (controller.text.isNotEmpty) {
+              try {
+                List<String> dateParts = controller.text.split('/');
+                initialDate = DateTime(
+                  int.parse(dateParts[2]), // Year
+                  int.parse(dateParts[1]), // Month
+                  int.parse(dateParts[0]), // Day
+                );
+              } catch (e) {
+                // Nếu format lỗi, vẫn giữ initialDate là DateTime.now()
+              }
+            }
+
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: initialDate,
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+            );
+
+            if (pickedDate != null) {
+              setState(() {
+                controller.text =
+                    '${pickedDate.day.toString().padLeft(2, '0')}/'
+                    '${pickedDate.month.toString().padLeft(2, '0')}/'
+                    '${pickedDate.year}';
+              });
+            }
+          }),
     );
   }
 }

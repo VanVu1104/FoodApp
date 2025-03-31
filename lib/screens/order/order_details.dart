@@ -4,6 +4,8 @@ import 'package:demo_firebase/services/cart_service.dart';
 import 'package:demo_firebase/services/order_service.dart';
 import 'package:demo_firebase/services/product_service.dart';
 import 'package:demo_firebase/utils/utils.dart';
+import 'package:demo_firebase/widgets/custom_app_bar.dart';
+import 'package:demo_firebase/widgets/custom_loading.dart';
 import 'package:demo_firebase/widgets/order_history_detail.dart';
 import 'package:flutter/material.dart';
 
@@ -35,76 +37,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> fetchOrderDetails() async {
     try {
-      // Use the OrderService to get order details
-      final orderDetails = await _orderService.getOrderById(widget.orderId);
-      print("OrderDetails load được là: ${orderDetails}");
-      // Get pickup address from Firestore if pickUpAddressId exists
-      if (orderDetails['pickUpAddressId'] != null &&
-          orderDetails['pickUpAddressId'].isNotEmpty) {
-        try {
-          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-              .collection('addresses')
-              .where('addressId', isEqualTo: orderDetails['pickUpAddressId'])
-              .limit(1)
-              .get();
+      // Use the new methods in OrderService
+      final orderDetails =
+          await _orderService.getFullOrderDetails(widget.orderId);
 
-          if (querySnapshot.docs.isNotEmpty) {
-            // Extract address name from the document
-            String pickUpAddress = querySnapshot.docs.first['addressName'] ??
-                'Địa chỉ không xác định';
-
-            // Update the orderDetails with the fetched address name
-            orderDetails['pickUpAddress'] = pickUpAddress;
-          } else {
-            // Handle case where no matching address was found
-            orderDetails['pickUpAddress'] = 'Địa chỉ không tìm thấy';
-            print(
-                'Không tìm thấy địa chỉ với ID: ${orderDetails['pickUpAddressId']}');
-          }
-        } catch (e) {
-          orderDetails['pickUpAddress'] = 'Địa chỉ không xác định';
-          print('Lỗi lấy địa chỉ: $e');
-        }
-      } else {
-        // Default value if no pickUpAddressId is provided
-        orderDetails['pickUpAddress'] = '';
-      }
+      // Process order items
       List<dynamic> cartItems = orderDetails['listCartItem'] ?? [];
-      List<Map<String, dynamic>> simplifiedOrderItems = [];
+      final processedOrderItems =
+          await _orderService.processOrderItems(cartItems);
 
-      for (var item in cartItems) {
-        String productId = item['productId'].toString();
-
-        // Get product details from service
-        final product = await _productService.getProductByProductId(productId);
-
-        if (product != null) {
-          // Get the size information if available
-          String sizeId = item['sizeId'] ?? '';
-          String sizeName = 'Standard';
-
-          // Find the matching size if it exists
-          if (product.sizes != null && product.sizes.isNotEmpty) {
-            final size = product.sizes.firstWhere(
-              (s) => s.sizeId == sizeId,
-              orElse: () =>
-                  ProductSize(sizeId: '', sizeName: 'Standard', extraPrice: 0),
-            );
-            sizeName = size.sizeName;
-          }
-
-          simplifiedOrderItems.add({
-            'productName': product.productName ?? 'Sản phẩm',
-            'productImg': product.productImg,
-            'sizeName': sizeName,
-            'price': item['unitPrice'] ?? product.productPrice ?? 0,
-            'quantity': item['quantity'] ?? 1,
-          });
-        }
-      }
       setState(() {
         _orderDetails = orderDetails;
-        orderItems = simplifiedOrderItems;
+        orderItems = processedOrderItems;
         _isLoading = false;
       });
     } catch (e) {
@@ -120,23 +64,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Chi tiết đơn hàng',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: customAppBar(context, "Chi tiết đơn hàng", showCart: false),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CustomLoading())
           : _errorMessage != null
               ? Center(child: Text(_errorMessage!))
               : _buildOrderDetail(),
@@ -204,7 +134,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.copy_outlined, size: 16, color: Colors.grey[600]),
+                //Nút coppy mã đơm
+                // Icon(Icons.copy_outlined, size: 16, color: Colors.grey[600]),
                 const Spacer(),
                 Text(
                   formattedDate,
@@ -275,10 +206,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -366,7 +293,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Tạm tính',
+                  'Tổng tiền',
                   style: TextStyle(fontSize: 15),
                 ),
                 Text(
@@ -435,17 +362,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: paymentMethod == 'cash'
-                      ? Colors.green[100]
-                      : Colors.blue[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  paymentMethod == 'cash' ? Icons.attach_money : Icons.payment,
-                  color: paymentMethod == 'cash' ? Colors.green : Colors.blue,
-                  size: 20,
-                ),
+                child: paymentMethod == 'cash'
+                    ? Image.asset(
+                        'assets/cash.png', // Đường dẫn ảnh tiền mặt
+                        width: 35,
+                        height: 35,
+                      )
+                    : Image.asset(
+                        'assets/zalo.png', // Đường dẫn ảnh ZaloPay
+                        width: 35,
+                        height: 35,
+                      ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -463,7 +390,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.red[700],
+                  color: Colors.red,
                 ),
               ),
             ],
@@ -476,10 +403,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget _buildRestaurantInfo(String pickUpAddress) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Row(
         children: [
           Container(
@@ -489,10 +412,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               color: Colors.blue[100],
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.storefront,
-              color: Colors.blue[700],
-            ),
+            child: Image.asset("assets/restaurant.png"),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -513,7 +433,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       : 'Địa chỉ không xác định',
                   style: const TextStyle(
                     color: Colors.black54,
-                    fontSize: 12,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -527,10 +447,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget _buildDeliveryAddressInfo(String deliveryAddress) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Row(
         children: [
           Container(
@@ -564,7 +480,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       : 'Đơn lấy tại cửa hàng',
                   style: const TextStyle(
                     color: Colors.black54,
-                    fontSize: 12,
+                    fontSize: 13,
                   ),
                 ),
               ],

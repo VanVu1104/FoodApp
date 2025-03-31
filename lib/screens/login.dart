@@ -1,4 +1,4 @@
-import 'package:demo_firebase/services/auth_google.dart';
+import 'package:demo_firebase/screens/register_phone.dart';
 import 'package:demo_firebase/services/forgot_password.dart';
 import 'package:demo_firebase/services/phone_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,18 +29,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRememberedUser();
     _checkAutoLogin();
-  }
-
-  //Hàm Load User đã đăng nhập trước đó hay chưa
-  void _loadRememberedUser() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _emailController.text = prefs.getString('email') ?? '';
-      _passwordController.text = prefs.getString('password') ?? '';
-      _rememberMe = prefs.getBool('rememberMe') ?? false;
-    });
   }
 
   // Hàm lưu member đã đăng nha
@@ -58,7 +47,10 @@ class _AuthScreenState extends State<AuthScreen> {
   // Check user đã đăng nhập trước đó hay chưa
   void _checkAutoLogin() async {
     if (_auth.currentUser != null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => MainScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -183,7 +175,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
                       SizedBox(height: size.height * 0.04),
 
-                      // Email field - with red border only
                       TextFormField(
                         controller: _emailController,
                         validator: _validateEmail,
@@ -363,7 +354,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
                       SizedBox(height: 20),
 
-                      // "Or" divider
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.grey.shade400)),
@@ -380,15 +370,43 @@ class _AuthScreenState extends State<AuthScreen> {
                           Expanded(child: Divider(color: Colors.grey.shade400)),
                         ],
                       ),
-
+                      OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.shade300),
+                          minimumSize: Size(double.infinity, 45),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/phone.png',
+                              height: 24,
+                              width: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              "Đăng nhập với số điện thoại",
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       SizedBox(height: 20),
 
-                      // Google sign in button
                       OutlinedButton(
                         onPressed: () async {
                           try {
-                            User? user =
-                                await FirebaseServices().signInWithGoogle();
+                            User? user = await AuthService().signInWithGoogle();
                             if (user != null) {
                               Navigator.pushReplacement(
                                 context,
@@ -420,7 +438,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/gg.png', // Make sure to add Google logo to assets
+                              'assets/gg.png',
                               height: 24,
                               width: 24,
                             ),
@@ -435,45 +453,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ],
                         ),
                       ),
-
-                      SizedBox(height: 16),
-
-                      // Phone sign in button
-                      OutlinedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => PhoneAuthentication()),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.shade300),
-                          minimumSize: Size(double.infinity, 45),
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.phone,
-                                size: 24, color: Color(0xFFDD2F36)),
-                            const SizedBox(width: 10),
-                            const Text(
-                              "Đăng nhập với số điện thoại",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 20),
-
                       // Error message display
                       if (_message.isNotEmpty)
                         Center(
