@@ -48,18 +48,17 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
 
     String phoneNumber =
         "+84${_phoneController.text.trim().replaceFirst(RegExp(r'^0'), '')}";
-    print("PhoneNumber đã nhập: ${phoneNumber}");
+    print("PhoneNumber đã nhập: $phoneNumber");
 
     try {
       bool isRegistered =
           await _authService.isPhoneNumberRegistered(phoneNumber);
 
       if (isRegistered) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreen()),
-        );
+        // Nếu đã có tài khoản => Gửi OTP và thực hiện đăng nhập
+        await _sendVerificationCode(phoneNumber, isNewUser: false);
       } else {
+        // Nếu chưa có tài khoản => Hiển thị form nhập tên
         setState(() {
           _showNameAndVerifyFields = true;
           _isLoading = false;
@@ -84,7 +83,7 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
       await _authService.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-sign in on Android
+          // Auto-sign in nếu có thể
           await _authService.signInWithPhoneNumber(
             verificationId: _verificationId ?? "",
             smsCode: credential.smsCode ?? "",
@@ -131,11 +130,11 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
 
     if (user != null) {
       setState(() {
-        _message = "Đăng ký thành công!";
+        _message = "Đăng nhập thành công!";
       });
-      Navigator.pushReplacement(
-        context,
+      Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => MainScreen()),
+        (route) => false,
       );
     } else {
       setState(() {

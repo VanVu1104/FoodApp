@@ -1,4 +1,5 @@
 import 'package:demo_firebase/services/auth_service.dart';
+import 'package:demo_firebase/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -68,7 +69,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
       if (userData != null) {
         setState(() {
           usernameController.text = userData['name'] ?? userName;
-          phoneController.text = userData['phone'] ?? '';
+          phoneController.text =
+              Utils().formatPhoneNumber(userData['phone'] ?? '');
           birthdateController.text = userData['birthdate'] ?? '';
         });
       }
@@ -107,8 +109,8 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                       color: Color(0xFFFD0000))),
               SizedBox(height: 20),
               _buildTextField(usernameController, 'Tên đăng nhập'),
-              _buildTextField(phoneController, 'Số điện thoại'),
-              _buildReadOnlyTextField(emailController, 'Email'),
+              _buildReadOnlyTextField(phoneController, 'Số điện thoại'),
+              _buildTextField(emailController, 'Email'),
               _buildDateField(birthdateController, 'Ngày sinh'),
               SizedBox(height: 20),
 

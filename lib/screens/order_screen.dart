@@ -374,10 +374,10 @@ class _OrderScreenState extends State<OrderScreen> {
               if (snapshot.hasData && snapshot.data != null) {
                 defaultName = snapshot.data?['name'] ?? defaultName;
                 defaultPhone = snapshot.data?['phone'] ?? defaultPhone;
-
+                String formatNumber = Utils().formatPhoneNumber(defaultPhone);
                 // Set the controllers with the retrieved or default values
                 _nameController.text = defaultName;
-                _phoneController.text = defaultPhone;
+                _phoneController.text = formatNumber;
               }
 
               return Column(

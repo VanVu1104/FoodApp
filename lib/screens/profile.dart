@@ -1,6 +1,7 @@
 import 'package:demo_firebase/screens/login.dart';
 import 'package:demo_firebase/screens/order/order_history.dart';
 import 'package:demo_firebase/screens/policy/policy_screen.dart';
+import 'package:demo_firebase/screens/register_phone.dart';
 import 'package:demo_firebase/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -136,9 +137,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
         if (title == 'Đăng xuất') {
           AuthService().signOut();
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => AuthScreen()),
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => RegisterPhoneScreen()),
+            (route) => false,
           );
         }
         if (title == 'Chính sách') {

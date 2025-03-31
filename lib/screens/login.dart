@@ -29,18 +29,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRememberedUser();
     _checkAutoLogin();
-  }
-
-  //Hàm Load User đã đăng nhập trước đó hay chưa
-  void _loadRememberedUser() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _emailController.text = prefs.getString('email') ?? '';
-      _passwordController.text = prefs.getString('password') ?? '';
-      _rememberMe = prefs.getBool('rememberMe') ?? false;
-    });
   }
 
   // Hàm lưu member đã đăng nha
@@ -58,7 +47,10 @@ class _AuthScreenState extends State<AuthScreen> {
   // Check user đã đăng nhập trước đó hay chưa
   void _checkAutoLogin() async {
     if (_auth.currentUser != null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => MainScreen()),
+        (route) => false,
+      );
     }
   }
 

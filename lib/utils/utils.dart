@@ -10,6 +10,14 @@ class Utils {
     return format.format(amount);
   }
 
+// Hàm format số điện thoại từ +84xxx về 0xxx
+  String formatPhoneNumber(String phoneNumber) {
+    if (phoneNumber.startsWith('+84')) {
+      return phoneNumber.replaceFirst('+84', '0');
+    }
+    return phoneNumber;
+  }
+
   /// Function Format DateTime to String with layout string
   String formatNumber(double value) {
     final f = new NumberFormat("#,###", "vi_VN");
@@ -30,6 +38,7 @@ class Utils {
     // Round down the fee to the nearest 1000
     return (fee / 1000).floor() * 1000;
   }
+
   /// Function Format DateTime to String with layout string
   static String formatDateTime(DateTime dateTime, String layout) {
     return DateFormat(layout).format(dateTime).toString();

@@ -1,4 +1,6 @@
+import 'package:demo_firebase/screens/home_screen.dart';
 import 'package:demo_firebase/screens/invoice/invoice_screen.dart';
+import 'package:demo_firebase/screens/main_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeDeliveryScreen extends StatelessWidget {
@@ -72,7 +74,10 @@ class HomeDeliveryScreen extends StatelessWidget {
             SizedBox(height: 20),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context);
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => MainScreen()),
+                  (route) => false,
+                );
               },
               child: Text(
                 'Quay về trang chủ',

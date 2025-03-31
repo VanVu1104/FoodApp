@@ -104,7 +104,7 @@ class AuthService {
 
         if (!userDoc.exists) {
           if (name == null || name.isEmpty) {
-            throw Exception("Name is required for new user registration");
+            throw Exception("Tên không được để trống khi đăng ký");
           }
 
           await user.updateDisplayName(name);
@@ -122,7 +122,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print("Phone Sign-In Failed: $e");
+      print("Lỗi đăng nhập bằng số điện thoại: $e");
       return null;
     }
   }
@@ -150,21 +150,16 @@ class AuthService {
 
   Future<bool> isPhoneNumberRegistered(String phoneNumber) async {
     try {
-      // Normalize the phone number by removing any potential leading zeros or additional formatting
       String normalizedPhoneNumber =
           phoneNumber.replaceAll(RegExp(r'^(\+84|84|0)'), '+84');
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+      QuerySnapshot querySnapshot = await _firestore
           .collection('users')
           .where('phone', isEqualTo: normalizedPhoneNumber)
           .limit(1)
           .get();
-      if (querySnapshot.docs.isNotEmpty) {
-        print("snapshot: ${querySnapshot}");
-        return true;
-      }
-      return false;
+      return querySnapshot.docs.isNotEmpty;
     } catch (e) {
-      print('Error checking phone number: $e');
+      print('Lỗi kiểm tra số điện thoại: $e');
       return false;
     }
   }

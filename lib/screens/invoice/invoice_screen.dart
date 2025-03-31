@@ -51,7 +51,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
             'productId': productId,
             'productName': product.productName ?? 'Sản phẩm',
             'description': product.productDescription ?? 'Không có mô tả',
-            'price': product.productPrice ?? 0,
+            'price': item['totalPrice'] ?? 0,
             'imagePath': product.productImg,
             'quantity': item['quantity'] ?? 1,
           });
@@ -276,11 +276,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 const Spacer(),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(),
-                      ),
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => MainScreen()),
+                      (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
