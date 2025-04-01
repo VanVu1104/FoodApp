@@ -1,3 +1,4 @@
+import 'package:demo_firebase/screens/discount_screen.dart';
 import 'package:demo_firebase/screens/login.dart';
 import 'package:demo_firebase/screens/order/order_history.dart';
 import 'package:demo_firebase/screens/policy/policy_screen.dart';
@@ -135,6 +136,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
           );
         }
+        if (title == 'Ưu đãi') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => DiscountScreen()),
+          );
+        }
         if (title == 'Đăng xuất') {
           AuthService().signOut();
           Navigator.of(context).pushAndRemoveUntil(
@@ -216,6 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () {}),
           ],
         ),
+        const SizedBox(height: 150),
       ],
     );
   }

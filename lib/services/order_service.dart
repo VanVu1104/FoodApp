@@ -104,18 +104,17 @@ class OrderService {
       String? feedback,
       String nameCustomer,
       String phoneCustomer) async {
+
     bool isPaymentSuccess = false;
     if (paymentMethod == "Zalo Pay") {
       isPaymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
     } else if (paymentMethod == "cash") {
-      // Cash payment is automatically successful
       isPaymentSuccess = true;
     }
 
     if (isPaymentSuccess) {
       DocumentReference docRef =
-          FirebaseFirestore.instance.collection('orders').doc();
-
+      FirebaseFirestore.instance.collection('orders').doc();
       String orderId = docRef.id;
 
       final createdAt = DateTime.now();
@@ -149,6 +148,38 @@ class OrderService {
 
       await docRef.set(orderProduct.toJson());
 
+      // 🔹 Remove used coupons from user's collection
+      if (currentUserId != null && currentUserId!.isNotEmpty) {
+        DocumentReference userRef =
+        FirebaseFirestore.instance.collection('users').doc(currentUserId);
+
+        // Use Firestore transaction to ensure data consistency
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          DocumentSnapshot userSnapshot = await transaction.get(userRef);
+
+          if (userSnapshot.exists) {
+            List<dynamic> userCoupons = userSnapshot.get('couponId') ?? [];
+
+            // Create a copy of the list and remove the used coupons
+            List<dynamic> updatedCoupons = List.from(userCoupons);
+
+            if (orderCouponId != null && orderCouponId.isNotEmpty) {
+              updatedCoupons.remove(orderCouponId);
+            }
+            if (shippingCouponId != null && shippingCouponId.isNotEmpty) {
+              updatedCoupons.remove(shippingCouponId);
+            }
+
+            // If the coupon list is empty, remove the field; otherwise, update the list
+            if (updatedCoupons.isEmpty) {
+              transaction.update(userRef, {'couponId': FieldValue.delete()});
+            } else {
+              transaction.update(userRef, {'couponId': updatedCoupons});
+            }
+          }
+        });
+      }
+
       // Clear cart after successful order
       await _cartService.clearCart();
 
@@ -157,6 +188,7 @@ class OrderService {
       throw Exception("Payment failed");
     }
   }
+
 
   /////////////////////////////////// Khai /////////////////////////////////////
   String _getStatusText(String status) {
