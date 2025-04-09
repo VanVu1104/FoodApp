@@ -41,6 +41,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       final orderDetails = await _orderService.getOrderById(widget.orderId);
       List<dynamic> cartItems = orderDetails['listCartItem'] ?? [];
       List<Map<String, dynamic>> fullOrderItems = [];
+      // Kiểm tra địa chỉ giao hàng
+      String addressName = orderDetails['deliveryAddressName'] ?? '';
+      if (addressName.isEmpty) {
+        addressName = await _orderService
+            .getAddressNameById(orderDetails['pickUpAddressId']);
+      }
       for (var item in cartItems) {
         String productId = item['productId'].toString();
 
@@ -60,6 +66,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       setState(() {
         orderData = orderDetails;
         orderItems = fullOrderItems;
+        orderData!['deliveryAddressName'] = addressName;
         totalPrice = orderDetails['totalPrice'];
         isLoading = false;
       });

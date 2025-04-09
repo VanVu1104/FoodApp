@@ -26,7 +26,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> initial() async {
     // Request notification permission
-    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
+    NotificationSettings settings =
+        await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -46,8 +47,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
       print('User denied notification permission. Skipping FCM token save.');
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -79,12 +78,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
                 child: Text(
-                  "Chưa có thông báo",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )); // Empty state
+              "Chưa có thông báo",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            )); // Empty state
           }
 
           List<Notify> notifications = snapshot.data!;
@@ -93,7 +92,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             Notify(
               title: 'SANG XỊN MỊN -WAGYU BURGER CHÍNH THỨC LÊN SÓNG!',
               body:
-              'Chỉ từ 49.000đ/ người các bạn có thể thưởng thức Thịt bò Wagyu - Ngon mềm, thắm...',
+                  'Chỉ từ 49.000đ/ người các bạn có thể thưởng thức Thịt bò Wagyu - Ngon mềm, thắm...',
               dateCreated: DateTime.now(),
               onTap: () => Navigator.push(context,
                   MaterialPageRoute(builder: (context) => NewsScreen1())),
@@ -104,9 +103,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
             Notify(
               title: 'SINH NHẬT THẢ GA, ĐÊ CRUNCH & DASH LO NHA!!!',
               body:
-              'Chỉ từ 78.000đ/ bé tiệc vui sắn sàng cho cả nhà cùng vui sinh nhật!',
+                  'Chỉ từ 78.000đ/ bé tiệc vui sắn sàng cho cả nhà cùng vui sinh nhật!',
               dateCreated: DateTime.now(),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NewsScreen2())),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => NewsScreen2())),
             ),
           );
 

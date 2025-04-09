@@ -206,7 +206,7 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   double getTotalPrice() {
-    double discount = rewardDiscount ? 500 : 0;
+    double discount = rewardDiscount ? -1000 : 0;
     return subTotal +
         (isDelivery ? deliveryFee : 0) -
         subTotalDiscount -
@@ -598,7 +598,7 @@ class _OrderScreenState extends State<OrderScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              "Thanh toán với điểm thưởng",
+              "Phí bảo vệ môi trường",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -616,7 +616,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ],
         ),
         const Text(
-          "Số dư điểm thưởng hiện tại của bạn là 500đ",
+          "Mỗi 1.000đ của bạn giúp môi trường tốt hơn",
           style: TextStyle(fontSize: 13, color: Color(0xFF797979)),
         ),
         const SizedBox(height: 16),

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 //import 'package:google_sign_in/google_sign_in.dart';
 //import 'package:demo_firebase/Login_Register/BackEnd/auth_service.dart';
+import 'package:demo_firebase/models/user_info.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -109,14 +110,19 @@ class AuthService {
 
           await user.updateDisplayName(name);
 
-          await _firestore.collection("users").doc(user.uid).set({
-            "uid": user.uid,
-            "phone": user.phoneNumber,
-            "name": name,
-            "role": "customer",
-            "createdAt": FieldValue.serverTimestamp(),
-            "diachi": "",
-          }, SetOptions(merge: true));
+          AccountInfo newUser = AccountInfo(
+            userId: user.uid,
+            name: name,
+            phone: user.phoneNumber ?? "Không xác định",
+            couponIds: [],
+            fcmToken: "",
+            updatedAt: DateTime.now(),
+          );
+
+          await _firestore
+              .collection("users")
+              .doc(user.uid)
+              .set(newUser.toJson(), SetOptions(merge: true));
         }
         return user;
       }
@@ -211,7 +217,7 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await GoogleSignIn().signOut(); // Đăng xuất khỏi Google
-    await _auth.signOut(); // Đăng xuất khỏi Firebase
+    await GoogleSignIn().signOut();
+    await _auth.signOut();
   }
 }

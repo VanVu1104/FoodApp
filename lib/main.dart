@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         routes: {
           // '/': (context) => MainScreen(),
           '/': (context) => ScreenLoading1(),
-          '/home': (context) => HomeScreen(),
+          '/home': (context) => MainScreen(),
           // '/': (context) => CartScreen(),
           // '/': (context) => NewsScreen2(),
           '/login': (context) => AuthScreen(), // Màn hình đăng nhập

@@ -3,6 +3,8 @@ import 'package:demo_firebase/screens/login.dart';
 import 'package:demo_firebase/screens/order/order_history.dart';
 import 'package:demo_firebase/screens/policy/policy_screen.dart';
 import 'package:demo_firebase/screens/register_phone.dart';
+import 'package:demo_firebase/screens/screen_loading.dart';
+import 'package:demo_firebase/screens/store_list_screen.dart';
 import 'package:demo_firebase/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         userName = user.displayName ?? user.email?.split('@').first ?? 'User';
       });
+    }
+  }
+
+  void _handleLogout(BuildContext context) async {
+    await AuthService().signOut();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/');
     }
   }
 
@@ -142,12 +151,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             MaterialPageRoute(builder: (context) => DiscountScreen()),
           );
         }
-        if (title == 'Đăng xuất') {
-          AuthService().signOut();
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => RegisterPhoneScreen()),
-            (route) => false,
+        if (title == 'Danh sách cửa hàng') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => StoreListScreen()),
           );
+        }
+        if (title == 'Đăng xuất') {
+          _handleLogout(context);
         }
         if (title == 'Chính sách') {
           Navigator.push(
