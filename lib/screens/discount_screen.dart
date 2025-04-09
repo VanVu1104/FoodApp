@@ -194,45 +194,48 @@ class _DiscountScreenState extends State<DiscountScreen>
           ),
         ],
       ),
-      bottomNavigationBar: widget.subtotal == null ? null : Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: Offset(0, -3),
+      bottomNavigationBar: widget.subtotal == null
+          ? null
+          : Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 10,
+                    offset: Offset(0, -3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, {
+                    'orderCoupon': selectedOrderCoupon,
+                    // Only return shipping coupon if delivery is enabled
+                    'shippingCoupon': widget.isDelivery == true
+                        ? selectedShippingCoupon
+                        : null,
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'Xác nhận',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context, {
-              'orderCoupon': selectedOrderCoupon,
-              // Only return shipping coupon if delivery is enabled
-              'shippingCoupon':
-                  widget.isDelivery == true ? selectedShippingCoupon : null,
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orangeAccent,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: Text(
-            'Xác nhận',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -324,6 +327,7 @@ class _DiscountScreenState extends State<DiscountScreen>
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
@@ -347,104 +351,112 @@ class _DiscountScreenState extends State<DiscountScreen>
                             ),
                             SizedBox(width: 16),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    coupon.couponName,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: isShippingCouponDisabled
-                                          ? Colors.grey
-                                          : Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: isShippingCouponDisabled
-                                              ? Colors.grey.shade200
-                                              : Colors.green.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: isShippingCouponDisabled
-                                                ? Colors.grey.shade300
-                                                : Colors.green.shade200,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          'Giảm ${coupon.isPercentage ? "${coupon.discountValue.toInt()}%" : Utils().formatCurrency(coupon.discountValue)}',
-                                          style: TextStyle(
-                                            color: isShippingCouponDisabled
-                                                ? Colors.grey
-                                                : Colors.green.shade700,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4),
-                                  if (coupon.minPurchaseAmount > 0)
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
                                     Text(
-                                      "Đơn tối thiểu: ${Utils().formatCurrency(coupon.minPurchaseAmount)}",
+                                      coupon.couponName,
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: isShippingCouponDisabled
+                                            ? Colors.grey
+                                            : Colors.black87,
                                       ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  if (isShippingCouponDisabled)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        "Không khả dụng khi tự đến lấy",
+                                    SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: isShippingCouponDisabled
+                                                ? Colors.grey.shade200
+                                                : Colors.green.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color: isShippingCouponDisabled
+                                                  ? Colors.grey.shade300
+                                                  : Colors.green.shade200,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Giảm ${coupon.isPercentage ? "${coupon.discountValue.toInt()}%" : Utils().formatCurrency(coupon.discountValue)}',
+                                            style: TextStyle(
+                                              color: isShippingCouponDisabled
+                                                  ? Colors.grey
+                                                  : Colors.green.shade700,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
+                                    if (coupon.minPurchaseAmount > 0)
+                                      Text(
+                                        "Đơn tối thiểu: ${Utils().formatCurrency(coupon.minPurchaseAmount)}",
                                         style: TextStyle(
-                                          color: Colors.red.shade700,
+                                          color: Colors.grey.shade600,
                                           fontSize: 12,
                                         ),
                                       ),
-                                    ),
-                                  if (coupon.type == CouponType.shipping &&
-                                      widget.isDelivery == true)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
+                                    if (isShippingCouponDisabled)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 4.0),
                                         child: Text(
-                                          "Phiếu giảm giá vận chuyển",
+                                          "Không khả dụng khi tự đến lấy",
                                           style: TextStyle(
-                                            color: Colors.blue.shade700,
+                                            color: Colors.red.shade700,
                                             fontSize: 12,
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4.0),
-                                    child: Text(
-                                      "HSD: ${coupon.expiredDate.day}/${coupon.expiredDate.month}/${coupon.expiredDate.year}",
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 12,
+                                    if (coupon.type == CouponType.shipping &&
+                                        widget.isDelivery == true)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 4.0),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            "Phiếu giảm giá vận chuyển",
+                                            style: TextStyle(
+                                              color: Colors.blue.shade700,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        "HSD: ${coupon.expiredDate.day}/${coupon.expiredDate.month}/${coupon.expiredDate.year}",
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
+                            SizedBox(width: 8),
                             if (isSelected)
                               Container(
                                 padding: EdgeInsets.all(8),
@@ -486,160 +498,162 @@ class _DiscountScreenState extends State<DiscountScreen>
   }
 
   Widget _buildEVoucherTab() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Nhập mã E-Voucher',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Nhập mã giảm giá vào ô bên dưới để thêm vào danh sách ưu đãi của bạn',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          SizedBox(height: 24),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-              color: Colors.grey.shade50,
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _couponController,
-              decoration: InputDecoration(
-                hintText: 'Nhập mã giảm giá',
-                border: InputBorder.none,
-                hintStyle: TextStyle(color: Colors.grey.shade400),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () => _couponController.clear(),
-                  color: Colors.grey.shade400,
-                ),
-              ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Nhập mã E-Voucher',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-              textCapitalization: TextCapitalization.characters,
-              onChanged: (value) {
-                if (errorMessage != null) {
-                  setState(() {
-                    errorMessage = null;
-                  });
-                }
-              },
             ),
-          ),
-          if (errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0, left: 4.0),
-              child: Text(
-                errorMessage!,
+            SizedBox(height: 8),
+            Text(
+              'Nhập mã giảm giá vào ô bên dưới để thêm vào danh sách ưu đãi của bạn',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            SizedBox(height: 24),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+                color: Colors.grey.shade50,
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _couponController,
+                decoration: InputDecoration(
+                  hintText: 'Nhập mã giảm giá',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: () => _couponController.clear(),
+                    color: Colors.grey.shade400,
+                  ),
+                ),
                 style: TextStyle(
-                  color: Colors.red.shade700,
-                  fontSize: 13,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textCapitalization: TextCapitalization.characters,
+                onChanged: (value) {
+                  if (errorMessage != null) {
+                    setState(() {
+                      errorMessage = null;
+                    });
+                  }
+                },
+              ),
+            ),
+            if (errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+                child: Text(
+                  errorMessage!,
+                  style: TextStyle(
+                    color: Colors.red.shade700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-            ),
-          SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: isSubmitting
-                ? null
-                : () => applyCouponCode(_couponController.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orangeAccent,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: isSubmitting
+                  ? null
+                  : () => applyCouponCode(_couponController.text.trim()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orangeAccent,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                disabledBackgroundColor: Colors.grey.shade300,
               ),
-              disabledBackgroundColor: Colors.grey.shade300,
-            ),
-            child: isSubmitting
-                ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    'Áp dụng',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-          SizedBox(height: 32),
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade100),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.blue.shade700,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Lưu ý',
+              child: isSubmitting
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Áp dụng',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Text(
-                  '• Mã E-Voucher có thể là mã giảm giá đơn hàng hoặc mã giảm giá vận chuyển',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '• Mỗi mã chỉ có thể sử dụng một lần',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '• Đảm bảo nhập đúng mã, bao gồm cả viết hoa nếu có',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
             ),
-          ),
-        ],
+            SizedBox(height: 32),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Lưu ý',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '• Mã E-Voucher có thể là mã giảm giá đơn hàng hoặc mã giảm giá vận chuyển',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '• Mỗi mã chỉ có thể sử dụng một lần',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '• Đảm bảo nhập đúng mã, bao gồm cả viết hoa nếu có',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:demo_firebase/screens/screen_loading.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -15,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Chuyển sang màn hình đăng nhập sau 3 giây
     Timer(Duration(seconds: 3), () {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => AuthScreen()));
+          context, MaterialPageRoute(builder: (context) => ScreenLoading1()));
     });
   }
 

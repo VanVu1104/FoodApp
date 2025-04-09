@@ -19,17 +19,14 @@ class _ScreenLoading1State extends State<ScreenLoading1> {
   @override
   void initState() {
     super.initState();
-    _checkAutoLoginWithEmail();
+    _checkAutoLogin();
   }
 
-  void _checkAutoLoginWithEmail() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool rememberMe = prefs.getBool('rememberMe') ?? false;
-    if (rememberMe || _auth.currentUser != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainScreen()),
-      );
+  void _checkAutoLogin() {
+    if (_auth.currentUser != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/home');
+      });
     }
   }
 

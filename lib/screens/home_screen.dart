@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
       color: Colors.white, // Màu nền của header
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 40, // Tránh status bar
-        bottom: 10, // Khoảng cách dưới
+        // bottom: 10, // Khoảng cách dưới
         left: 10,
         right: 10,
       ),
@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Logo
           Image.asset(
-            'assets/logo3.png',
+            'assets/icon_home.jpg',
             width: 200,
             fit: BoxFit.fitWidth,
           ),

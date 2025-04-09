@@ -104,7 +104,6 @@ class OrderService {
       String? feedback,
       String nameCustomer,
       String phoneCustomer) async {
-
     bool isPaymentSuccess = false;
     if (paymentMethod == "Zalo Pay") {
       isPaymentSuccess = await ZaloPayment.processPayment(context, totalPrice);
@@ -114,7 +113,7 @@ class OrderService {
 
     if (isPaymentSuccess) {
       DocumentReference docRef =
-      FirebaseFirestore.instance.collection('orders').doc();
+          FirebaseFirestore.instance.collection('orders').doc();
       String orderId = docRef.id;
 
       final createdAt = DateTime.now();
@@ -151,7 +150,7 @@ class OrderService {
       // 🔹 Remove used coupons from user's collection
       if (currentUserId != null && currentUserId!.isNotEmpty) {
         DocumentReference userRef =
-        FirebaseFirestore.instance.collection('users').doc(currentUserId);
+            FirebaseFirestore.instance.collection('users').doc(currentUserId);
 
         // Use Firestore transaction to ensure data consistency
         await FirebaseFirestore.instance.runTransaction((transaction) async {
@@ -188,7 +187,6 @@ class OrderService {
       throw Exception("Payment failed");
     }
   }
-
 
   /////////////////////////////////// Khai /////////////////////////////////////
   String _getStatusText(String status) {
@@ -248,6 +246,28 @@ class OrderService {
     } catch (e) {
       print('Error getting order details: $e');
       throw Exception('Failed to get order details: $e');
+    }
+  }
+
+  Future<String> getAddressNameById(String? addressId) async {
+    if (addressId == null || addressId.isEmpty) {
+      return 'Chưa có thông tin';
+    }
+
+    try {
+      DocumentSnapshot addressDoc = await FirebaseFirestore.instance
+          .collection('addresses')
+          .doc(addressId)
+          .get();
+
+      if (addressDoc.exists) {
+        return addressDoc['addressName'] ?? 'Địa chỉ không xác định';
+      } else {
+        return 'Địa chỉ không xác định';
+      }
+    } catch (e) {
+      print('Lỗi lấy địa chỉ: $e');
+      return 'Lỗi khi lấy địa chỉ';
     }
   }
 
